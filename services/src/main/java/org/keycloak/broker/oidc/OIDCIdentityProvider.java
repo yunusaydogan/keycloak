@@ -80,7 +80,7 @@ import static org.keycloak.utils.LockObjectsForModification.lockUserSessionsForM
 public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIdentityProviderConfig> implements ExchangeExternalToken {
     protected static final Logger logger = Logger.getLogger(OIDCIdentityProvider.class);
 
-    public static final String SCOPE_OPENID = "openid";
+    public static final String SCOPE_OPENID = "";
     public static final String FEDERATED_ID_TOKEN = "FEDERATED_ID_TOKEN";
     public static final String USER_INFO = "UserInfo";
     public static final String FEDERATED_ACCESS_TOKEN_RESPONSE = "FEDERATED_ACCESS_TOKEN_RESPONSE";
@@ -361,6 +361,9 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     @Override
     public BrokeredIdentityContext getFederatedIdentity(String response) {
         AccessTokenResponse tokenResponse = null;
+        logger.error("bidb:1");
+        logger.error(response);
+        throw new IdentityBrokerException("bidb----2---", response);
         try {
             tokenResponse = JsonSerialization.readValue(response, AccessTokenResponse.class);
         } catch (IOException e) {
