@@ -363,7 +363,6 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         AccessTokenResponse tokenResponse = null;
         logger.error("bidb:1");
         logger.error(response);
-        throw new IdentityBrokerException("bidb----2---", response);
         try {
             tokenResponse = JsonSerialization.readValue(response, AccessTokenResponse.class);
         } catch (IOException e) {
