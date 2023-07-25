@@ -47,8 +47,8 @@ public class LinkedInIdentityProvider extends AbstractOAuth2IdentityProvider<OAu
 	public static final String TOKEN_URL = "https://giris.turkiye.gov.tr/OAuth2AuthorizationServer/AccessTokenController";
 	public static final String PROFILE_URL = "https://giris.turkiye.gov.tr/OAuth2AuthorizationServer/AccessTokenController";
 	public static final String EMAIL_URL = "https://giris.turkiye.gov.tr/OAuth2AuthorizationServer/AccessTokenController";
-	//public static final String EMAIL_SCOPE = "r_emailaddress";
-	//public static final String DEFAULT_SCOPE = "r_liteprofile " + EMAIL_SCOPE;
+	public static final String EMAIL_SCOPE = "r_emailaddress";
+	public static final String DEFAULT_SCOPE = "r_liteprofile " + EMAIL_SCOPE;
 
 	public LinkedInIdentityProvider(KeycloakSession session, OAuth2IdentityProviderConfig config) {
 		super(session, config);
