@@ -357,50 +357,136 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         }
     }
 
+    //bidb-----------
+	@Override
+	protected BrokeredIdentityContext getFederatedIdentity(String response) {
 
-    @Override
-    public BrokeredIdentityContext getFederatedIdentity(String response) {
-        AccessTokenResponse tokenResponse = null;
-        logger.error("bidb:1");
-        logger.error(response);
+         AccessTokenResponse tokenResponse = null;
+        log.debug("bidb:1");
+        log.debug(response);
         try {
             tokenResponse = JsonSerialization.readValue(response, AccessTokenResponse.class);
         } catch (IOException e) {
             throw new IdentityBrokerException("Could not decode access token response.", e);
         }
         String accessToken = verifyAccessToken(tokenResponse);
-        String encodedIdToken = tokenResponse.getIdToken();
+		log.debug("getFederatedIdentity()");
+		try {
+			BrokeredIdentityContext identity = extractIdentityFromProfile(null, doHttpGet(PROFILE_URL, accessToken));
 
-        if(encodedIdToken == null) {
-            JsonWebToken idToken = validateToken('{  "sub": "18734309634",  "name": "John Doe ff",  "admin": true,  "iat": 1689769697,  "exp": 1689773297, "tckimlik":"18734309634"}');
-        } else {
-            JsonWebToken idToken = validateToken(encodedIdToken);
-        }
+			identity.setEmail(fetchEmailAddress(accessToken, identity));
+
+			if (identity.getUsername() == null) {
+				identity.setUsername(identity.getEmail());
+			}
+
+			return identity;
+		} catch (Exception e) {
+			throw new IdentityBrokerException("Could not obtain user profile from linkedIn.", e);
+		}
+	}
+@Override
+	protected BrokeredIdentityContext extractIdentityFromProfile(EventBuilder event, JsonNode profile) {
+		BrokeredIdentityContext user = new BrokeredIdentityContext(getJsonProperty(profile, "id"));
+
+		user.setFirstName(getFirstMultiLocaleString(profile, "firstName"));
+		user.setLastName(getFirstMultiLocaleString(profile, "lastName"));
+		user.setIdpConfig(getConfig());
+		user.setIdp(this);
+
+		AbstractJsonUserAttributeMapper.storeUserProfileForMapper(user, profile, getConfig().getAlias());
+
+		return user;
+	}
+
+    	private String fetchEmailAddress(String accessToken, BrokeredIdentityContext identity) {
+		if (identity.getEmail() == null && getConfig().getDefaultScope() != null && getConfig().getDefaultScope().contains(EMAIL_SCOPE)) {
+			try {
+				JsonNode emailAddressNode = doHttpGet(EMAIL_URL, accessToken).findPath("emailAddress");
+
+				if (emailAddressNode != null) {
+					return emailAddressNode.asText();
+				}
+			} catch (IOException cause) {
+				throw new RuntimeException("Failed to retrieve user email", cause);
+			}
+		}
+
+		return null;
+	}
+
+	private JsonNode doHttpGet(String url, String bearerToken) throws IOException {
+		JsonNode response = SimpleHttp.doGet(url, session).header("Authorization", "Bearer " + bearerToken).asJson();
+
+		if (response.hasNonNull("serviceErrorCode")) {
+			throw new IdentityBrokerException("Could not obtain response from [" + url + "]. Response from server: " + response);
+		}
+
+		return response;
+	}
+
+	private String getFirstMultiLocaleString(JsonNode node, String name) {
+		JsonNode claim = node.get(name);
+
+		if (claim != null) {
+			JsonNode localized = claim.get("localized");
+
+			if (localized != null) {
+				Iterator<JsonNode> iterator = localized.iterator();
+
+				if (iterator.hasNext()) {
+					return iterator.next().asText();
+				}
+			}
+		}
+
+		return null;
+	}
+    //bidb----------
+
+    // @Override
+    // public BrokeredIdentityContext getFederatedIdentity(String response) {
+    //     AccessTokenResponse tokenResponse = null;
+    //     logger.error("bidb:1");
+    //     logger.error(response);
+    //     try {
+    //         tokenResponse = JsonSerialization.readValue(response, AccessTokenResponse.class);
+    //     } catch (IOException e) {
+    //         throw new IdentityBrokerException("Could not decode access token response.", e);
+    //     }
+    //     String accessToken = verifyAccessToken(tokenResponse);
+    //     String encodedIdToken = tokenResponse.getIdToken();
+
+    //     if(encodedIdToken == null) {
+    //         JsonWebToken idToken = validateToken('{  "sub": "18734309634",  "name": "John Doe ff",  "admin": true,  "iat": 1689769697,  "exp": 1689773297, "tckimlik":"18734309634"}');
+    //     } else {
+    //         JsonWebToken idToken = validateToken(encodedIdToken);
+    //     }
 
 
-        try {
-            BrokeredIdentityContext identity = extractIdentity(tokenResponse, accessToken, idToken);
+    //     try {
+    //         BrokeredIdentityContext identity = extractIdentity(tokenResponse, accessToken, idToken);
             
-            if (!identity.getId().equals(idToken.getSubject())) {
-                throw new IdentityBrokerException("Mismatch between the subject in the id_token and the subject from the user_info endpoint");
-            }
+    //         if (!identity.getId().equals(idToken.getSubject())) {
+    //             throw new IdentityBrokerException("Mismatch between the subject in the id_token and the subject from the user_info endpoint");
+    //         }
 
-            identity.getContextData().put(BROKER_NONCE_PARAM, idToken.getOtherClaims().get(OIDCLoginProtocol.NONCE_PARAM));
+    //         identity.getContextData().put(BROKER_NONCE_PARAM, idToken.getOtherClaims().get(OIDCLoginProtocol.NONCE_PARAM));
             
-            if (getConfig().isStoreToken()) {
-                if (tokenResponse.getExpiresIn() > 0) {
-                    long accessTokenExpiration = Time.currentTime() + tokenResponse.getExpiresIn();
-                    tokenResponse.getOtherClaims().put(ACCESS_TOKEN_EXPIRATION, accessTokenExpiration);
-                    response = JsonSerialization.writeValueAsString(tokenResponse);
-                }
-                identity.setToken(response);
-            }
+    //         if (getConfig().isStoreToken()) {
+    //             if (tokenResponse.getExpiresIn() > 0) {
+    //                 long accessTokenExpiration = Time.currentTime() + tokenResponse.getExpiresIn();
+    //                 tokenResponse.getOtherClaims().put(ACCESS_TOKEN_EXPIRATION, accessTokenExpiration);
+    //                 response = JsonSerialization.writeValueAsString(tokenResponse);
+    //             }
+    //             identity.setToken(response);
+    //         }
 
-            return identity;
-        } catch (Exception e) {
-            throw new IdentityBrokerException("Could not fetch attributes from userinfo endpoint.", e);
-        }
-    }
+    //         return identity;
+    //     } catch (Exception e) {
+    //         throw new IdentityBrokerException("Could not fetch attributes from userinfo endpoint.", e);
+    //     }
+    // }
 
     private static final MediaType APPLICATION_JWT_TYPE = MediaType.valueOf("application/jwt");
 
@@ -672,53 +758,53 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         return userInfoUrl;
     }
 
-    @Override
-    protected BrokeredIdentityContext extractIdentityFromProfile(EventBuilder event, JsonNode userInfo) {
-        String id = getJsonProperty(userInfo, "sub");
-        if (id == null) {
-            event.detail(Details.REASON, "sub claim is null from user info json");
-            event.error(Errors.INVALID_TOKEN);
-            throw new ErrorResponseException(OAuthErrorException.INVALID_TOKEN, "invalid token", Response.Status.BAD_REQUEST);
-        }
-        BrokeredIdentityContext identity = new BrokeredIdentityContext(id);
+    // @Override
+    // protected BrokeredIdentityContext extractIdentityFromProfile(EventBuilder event, JsonNode userInfo) {
+    //     String id = getJsonProperty(userInfo, "sub");
+    //     if (id == null) {
+    //         event.detail(Details.REASON, "sub claim is null from user info json");
+    //         event.error(Errors.INVALID_TOKEN);
+    //         throw new ErrorResponseException(OAuthErrorException.INVALID_TOKEN, "invalid token", Response.Status.BAD_REQUEST);
+    //     }
+    //     BrokeredIdentityContext identity = new BrokeredIdentityContext(id);
 
-        String name = getJsonProperty(userInfo, "name");
-        String preferredUsername = getUsernameFromUserInfo(userInfo);
-        String givenName = getJsonProperty(userInfo, "given_name");
-        String familyName = getJsonProperty(userInfo, "family_name");
-        String email = getJsonProperty(userInfo, "email");
+    //     String name = getJsonProperty(userInfo, "name");
+    //     String preferredUsername = getUsernameFromUserInfo(userInfo);
+    //     String givenName = getJsonProperty(userInfo, "given_name");
+    //     String familyName = getJsonProperty(userInfo, "family_name");
+    //     String email = getJsonProperty(userInfo, "email");
 
-        AbstractJsonUserAttributeMapper.storeUserProfileForMapper(identity, userInfo, getConfig().getAlias());
+    //     AbstractJsonUserAttributeMapper.storeUserProfileForMapper(identity, userInfo, getConfig().getAlias());
 
-        identity.setId(id);
+    //     identity.setId(id);
         
-        if (givenName != null) {
-            identity.setFirstName(givenName);
-        }
+    //     if (givenName != null) {
+    //         identity.setFirstName(givenName);
+    //     }
         
-        if (familyName != null) {
-            identity.setLastName(familyName);
-        }
+    //     if (familyName != null) {
+    //         identity.setLastName(familyName);
+    //     }
         
-        if (givenName == null && familyName == null) {
-            identity.setName(name);
-        }
+    //     if (givenName == null && familyName == null) {
+    //         identity.setName(name);
+    //     }
         
-        identity.setEmail(email);
+    //     identity.setEmail(email);
 
-        identity.setBrokerUserId(getConfig().getAlias() + "." + id);
+    //     identity.setBrokerUserId(getConfig().getAlias() + "." + id);
 
-        if (preferredUsername == null) {
-            preferredUsername = email;
-        }
+    //     if (preferredUsername == null) {
+    //         preferredUsername = email;
+    //     }
 
-        if (preferredUsername == null) {
-            preferredUsername = id;
-        }
+    //     if (preferredUsername == null) {
+    //         preferredUsername = id;
+    //     }
 
-        identity.setUsername(preferredUsername);
-        return identity;
-    }
+    //     identity.setUsername(preferredUsername);
+    //     return identity;
+    // }
 
     protected String getUsernameFromUserInfo(JsonNode userInfo) {
         return getJsonProperty(userInfo, "preferred_username");
