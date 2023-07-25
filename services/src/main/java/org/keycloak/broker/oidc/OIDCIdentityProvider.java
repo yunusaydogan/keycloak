@@ -403,7 +403,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 	}
 
     @Override
-	public BrokeredIdentityContext extractIdentityFromProfile(EventBuilder event, JsonNode profile) {
+	protected  BrokeredIdentityContext extractIdentityFromProfile(EventBuilder event, JsonNode profile) {
 		BrokeredIdentityContext user = new BrokeredIdentityContext(getJsonProperty(profile, "id"));
 
 		user.setFirstName(getFirstMultiLocaleString(profile, "firstName"));
@@ -432,7 +432,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 		return null;
 	}
 
-	public JsonNode doHttpGet(String url, String bearerToken) throws IOException {
+	protected  JsonNode doHttpGet(String url, String bearerToken) throws IOException {
 		JsonNode response = SimpleHttp.doGet(url, session).header("Authorization", "Bearer " + bearerToken).asJson();
 
 		if (response.hasNonNull("serviceErrorCode")) {
@@ -442,7 +442,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 		return response;
 	}
 
-	public String getFirstMultiLocaleString(JsonNode node, String name) {
+	protected  String getFirstMultiLocaleString(JsonNode node, String name) {
 		JsonNode claim = node.get(name);
 
 		if (claim != null) {
