@@ -94,6 +94,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 	public static final String TOKEN_URL = "https://giris.turkiye.gov.tr/OAuth2AuthorizationServer/AccessTokenController";
 	public static final String PROFILE_URL = "https://giris.turkiye.gov.tr/OAuth2AuthorizationServer/AccessTokenController";
 	public static final String EMAIL_URL = "https://giris.turkiye.gov.tr/OAuth2AuthorizationServer/AccessTokenController";
+	public static final String EMAIL_SCOPE = "r_emailaddress";
 
     public OIDCIdentityProvider(KeycloakSession session, OIDCIdentityProviderConfig config) {
         super(session, config);
