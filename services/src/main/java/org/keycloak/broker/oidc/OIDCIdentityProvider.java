@@ -79,6 +79,7 @@ import static org.keycloak.utils.LockObjectsForModification.lockUserSessionsForM
  */
 public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIdentityProviderConfig> implements ExchangeExternalToken {
     protected static final Logger logger = Logger.getLogger(OIDCIdentityProvider.class);
+    private static final Logger log = Logger.getLogger(OIDCIdentityProvider.class);
 
     public static final String SCOPE_OPENID = "";
     public static final String FEDERATED_ID_TOKEN = "FEDERATED_ID_TOKEN";
@@ -88,6 +89,11 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     public static final String ACCESS_TOKEN_EXPIRATION = "accessTokenExpiration";
     public static final String EXCHANGE_PROVIDER = "EXCHANGE_PROVIDER";
     private static final String BROKER_NONCE_PARAM = "BROKER_NONCE";
+
+    public static final String AUTH_URL = "https://giris.turkiye.gov.tr/OAuth2AuthorizationServer/AuthorizationController";
+	public static final String TOKEN_URL = "https://giris.turkiye.gov.tr/OAuth2AuthorizationServer/AccessTokenController";
+	public static final String PROFILE_URL = "https://giris.turkiye.gov.tr/OAuth2AuthorizationServer/AccessTokenController";
+	public static final String EMAIL_URL = "https://giris.turkiye.gov.tr/OAuth2AuthorizationServer/AccessTokenController";
 
     public OIDCIdentityProvider(KeycloakSession session, OIDCIdentityProviderConfig config) {
         super(session, config);
@@ -359,7 +365,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
     //bidb-----------
 	@Override
-	protected BrokeredIdentityContext getFederatedIdentity(String response) {
+	public BrokeredIdentityContext getFederatedIdentity(String response) {
 
          AccessTokenResponse tokenResponse = null;
         log.debug("bidb:1");
@@ -385,8 +391,9 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 			throw new IdentityBrokerException("Could not obtain user profile from linkedIn.", e);
 		}
 	}
-@Override
-	protected BrokeredIdentityContext extractIdentityFromProfile(EventBuilder event, JsonNode profile) {
+
+    @Override
+	public BrokeredIdentityContext extractIdentityFromProfile(EventBuilder event, JsonNode profile) {
 		BrokeredIdentityContext user = new BrokeredIdentityContext(getJsonProperty(profile, "id"));
 
 		user.setFirstName(getFirstMultiLocaleString(profile, "firstName"));
@@ -415,7 +422,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 		return null;
 	}
 
-	private JsonNode doHttpGet(String url, String bearerToken) throws IOException {
+	public JsonNode doHttpGet(String url, String bearerToken) throws IOException {
 		JsonNode response = SimpleHttp.doGet(url, session).header("Authorization", "Bearer " + bearerToken).asJson();
 
 		if (response.hasNonNull("serviceErrorCode")) {
@@ -425,7 +432,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 		return response;
 	}
 
-	private String getFirstMultiLocaleString(JsonNode node, String name) {
+	public String getFirstMultiLocaleString(JsonNode node, String name) {
 		JsonNode claim = node.get(name);
 
 		if (claim != null) {
