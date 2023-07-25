@@ -98,10 +98,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     public static final String EXCHANGE_PROVIDER = "EXCHANGE_PROVIDER";
     private static final String BROKER_NONCE_PARAM = "BROKER_NONCE";
 
-    public static final String AUTH_URL = "https://giris.turkiye.gov.tr/OAuth2AuthorizationServer/AuthorizationController";
-    public static final String TOKEN_URL = "https://giris.turkiye.gov.tr/OAuth2AuthorizationServer/AccessTokenController";
-    public static final String PROFILE_URL = "https://giris.turkiye.gov.tr/OAuth2AuthorizationServer/AccessTokenController";
-    public static final String EMAIL_URL = "https://giris.turkiye.gov.tr/OAuth2AuthorizationServer/AccessTokenController";
+    public static final String EMAIL_URL = "https://gop.edu.tr";
     public static final String EMAIL_SCOPE = "r_emailaddress";
 
     public OIDCIdentityProvider(KeycloakSession session, OIDCIdentityProviderConfig config) {
@@ -448,7 +445,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         logger.error("getFederatedIdentityEdevlet()");
         logger.error(accessToken);
         try {
-            BrokeredIdentityContext identity = extractIdentityFromProfileEdevlet(null, doHttpGet(AUTH_URL, accessToken));
+            BrokeredIdentityContext identity = extractIdentityFromProfileEdevlet(null, doHttpGet(getConfig().getAuthorizationUrl(), accessToken));
   logger.error("getFederatedIdentityEdevlet() 2");
         logger.error(accessToken);
             // identity.setEmail(fetchEmailAddress(accessToken, identity));
