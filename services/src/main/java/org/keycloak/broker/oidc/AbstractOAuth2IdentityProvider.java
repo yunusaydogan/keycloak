@@ -498,9 +498,9 @@ public abstract class AbstractOAuth2IdentityProvider<C extends OAuth2IdentityPro
 
                 if (authorizationCode != null) {
                     String response = generateTokenRequest(authorizationCode).asString();
-
+                    logger.error("federatedIdentity bdb");
                     BrokeredIdentityContext federatedIdentity = getFederatedIdentity(response);
-
+                    logger.error("federatedIdentity bdb 2");
                     if (getConfig().isStoreToken()) {
                         // make sure that token wasn't already set by getFederatedIdentity();
                         // want to be able to allow provider to set the token itself.
