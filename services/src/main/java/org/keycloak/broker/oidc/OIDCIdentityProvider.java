@@ -186,8 +186,38 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     @Override
     protected Response exchangeStoredToken(UriInfo uriInfo, EventBuilder event, ClientModel authorizedClient,
             UserSessionModel tokenUserSession, UserModel tokenSubject) {
-        FederatedIdentityModel model = session.users().getFederatedIdentity(authorizedClient.getRealm(), tokenSubject,
-                getConfig().getAlias());
+        FederatedIdentityModel model = session.users().getFederatedIdentity(authorizedClient.getRealm(), tokenSubject,getConfig().getAlias());
+        logger.error("exchangeStoredToken 1");
+        logger.error(getConfig().getClientId());
+        if(getConfig().getClientId() == "39337db8-4aaa-4c61-82ec-a12140f12395") 
+        {
+                    logger.error("exchangeStoredToken 2");
+        logger.error(getConfig().getClientId());
+            if (model == null || model.getToken() == null) {
+                event.detail(Details.REASON, "requested_issuer is not linked");
+                event.error(Errors.INVALID_TOKEN);
+                return exchangeNotLinked(uriInfo, authorizedClient, tokenUserSession, tokenSubject);
+            }
+            String accessToken = extractTokenFromResponse(model.getToken(), getAccessTokenResponseParameter());
+            if (accessToken == null) {
+                model.setToken(null);
+                session.users().updateFederatedIdentity(authorizedClient.getRealm(), tokenSubject, model);
+                event.detail(Details.REASON, "requested_issuer token expired");
+                event.error(Errors.INVALID_TOKEN);
+                return exchangeTokenExpired(uriInfo, authorizedClient, tokenUserSession, tokenSubject);
+            }
+            AccessTokenResponse tokenResponse = new AccessTokenResponse();
+            tokenResponse.setToken(accessToken);
+            tokenResponse.setIdToken(null);
+            tokenResponse.setRefreshToken(null);
+            tokenResponse.setRefreshExpiresIn(0);
+            tokenResponse.getOtherClaims().clear();
+            tokenResponse.getOtherClaims().put(OAuth2Constants.ISSUED_TOKEN_TYPE, OAuth2Constants.ACCESS_TOKEN_TYPE);
+            tokenResponse.getOtherClaims().put(ACCOUNT_LINK_URL, getLinkingUrl(uriInfo, authorizedClient, tokenUserSession));
+            event.success();
+            return Response.ok(tokenResponse).type(MediaType.APPLICATION_JSON_TYPE).build();
+        } else {
+
         if (model == null || model.getToken() == null) {
             event.detail(Details.REASON, "requested_issuer is not linked");
             event.error(Errors.INVALID_TOKEN);
@@ -250,9 +280,11 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
                     getLinkingUrl(uriInfo, authorizedClient, tokenUserSession));
             event.success();
             return Response.ok(tokenResponse).type(MediaType.APPLICATION_JSON_TYPE).build();
+        
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
     }
 
     private String getIDTokenForLogout(KeycloakSession session, UserSessionModel userSession) {
