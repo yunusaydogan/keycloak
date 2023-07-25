@@ -95,7 +95,7 @@ public class GitLabIdentityProvider extends OIDCIdentityProvider  implements Soc
 	}
 
 	@Override
-	public  BrokeredIdentityContext extractIdentityFromProfile(EventBuilder event, JsonNode profile) {
+	protected BrokeredIdentityContext extractIdentityFromProfile(EventBuilder event, JsonNode profile) {
 		String id = getJsonProperty(profile, "id");
 		if (id == null) {
 			event.detail(Details.REASON, "id claim is null from user info json");

@@ -43,10 +43,10 @@ public class LinkedInIdentityProvider extends AbstractOAuth2IdentityProvider<OAu
 
 	private static final Logger log = Logger.getLogger(LinkedInIdentityProvider.class);
 
-	public static final String AUTH_URL = "https://giris.turkiye.gov.tr/OAuth2AuthorizationServer/AuthorizationController";
-	public static final String TOKEN_URL = "https://giris.turkiye.gov.tr/OAuth2AuthorizationServer/AccessTokenController";
-	public static final String PROFILE_URL = "https://giris.turkiye.gov.tr/OAuth2AuthorizationServer/AccessTokenController";
-	public static final String EMAIL_URL = "https://giris.turkiye.gov.tr/OAuth2AuthorizationServer/AccessTokenController";
+	public static final String AUTH_URL = "https://www.linkedin.com/oauth/v2/authorization";
+	public static final String TOKEN_URL = "https://www.linkedin.com/oauth/v2/accessToken";
+	public static final String PROFILE_URL = "https://api.linkedin.com/v2/me";
+	public static final String EMAIL_URL = "https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))";
 	public static final String EMAIL_SCOPE = "r_emailaddress";
 	public static final String DEFAULT_SCOPE = "r_liteprofile " + EMAIL_SCOPE;
 
@@ -55,8 +55,10 @@ public class LinkedInIdentityProvider extends AbstractOAuth2IdentityProvider<OAu
 		config.setAuthorizationUrl(AUTH_URL);
 		config.setTokenUrl(TOKEN_URL);
 		config.setUserInfoUrl(PROFILE_URL);
-		config.setDefaultScope(config.getDefaultScope());
-		
+		// email scope is mandatory in order to resolve the username using the email address
+		if (!config.getDefaultScope().contains(EMAIL_SCOPE)) {
+			config.setDefaultScope(config.getDefaultScope() + " " + EMAIL_SCOPE);
+		}
 	}
 
 	@Override
@@ -68,6 +70,21 @@ public class LinkedInIdentityProvider extends AbstractOAuth2IdentityProvider<OAu
 	protected String getProfileEndpointForValidation(EventBuilder event) {
 		return PROFILE_URL;
 	}
+
+	@Override
+	protected BrokeredIdentityContext extractIdentityFromProfile(EventBuilder event, JsonNode profile) {
+		BrokeredIdentityContext user = new BrokeredIdentityContext(getJsonProperty(profile, "id"));
+
+		user.setFirstName(getFirstMultiLocaleString(profile, "firstName"));
+		user.setLastName(getFirstMultiLocaleString(profile, "lastName"));
+		user.setIdpConfig(getConfig());
+		user.setIdp(this);
+
+		AbstractJsonUserAttributeMapper.storeUserProfileForMapper(user, profile, getConfig().getAlias());
+
+		return user;
+	}
+
 
 	@Override
 	protected BrokeredIdentityContext doGetFederatedIdentity(String accessToken) {
@@ -86,23 +103,6 @@ public class LinkedInIdentityProvider extends AbstractOAuth2IdentityProvider<OAu
 			throw new IdentityBrokerException("Could not obtain user profile from linkedIn.", e);
 		}
 	}
-
-	@Override
-	protected BrokeredIdentityContext extractIdentityFromProfile(EventBuilder event, JsonNode profile) {
-		BrokeredIdentityContext user = new BrokeredIdentityContext(getJsonProperty(profile, "id"));
-
-		user.setFirstName(getFirstMultiLocaleString(profile, "firstName"));
-		user.setLastName(getFirstMultiLocaleString(profile, "lastName"));
-		user.setIdpConfig(getConfig());
-		user.setIdp(this);
-
-		AbstractJsonUserAttributeMapper.storeUserProfileForMapper(user, profile, getConfig().getAlias());
-
-		return user;
-	}
-
-
-
 
 	@Override
 	protected String getDefaultScopes() {
