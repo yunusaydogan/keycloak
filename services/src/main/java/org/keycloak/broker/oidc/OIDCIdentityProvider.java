@@ -440,7 +440,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         user.setUsername("yunus.aydogan");
         user.setFirstName("YUNUS");
         user.setLastName("AYDOĞAN");
-        identity.setEmail("yunus.aydogan@gop.edu.tr");
+        user.setEmail("yunus.aydogan@gop.edu.tr");
         user.setIdpConfig(getConfig());
         user.setIdp(this);
 
