@@ -42,25 +42,19 @@ public class JWSInput implements JOSE {
     public JWSInput(String wire) throws JWSInputException {
         try {
             this.wireString = wire;
-            if(wire.indexOf("tckimlik") > -1) {
-                content = wire.getBytes();
-            } else {
-                String[] parts = wire.split("\\.");
-                if (parts.length < 2 || parts.length > 3) throw new IllegalArgumentException("Parsing error");
-                encodedHeader = parts[0];
-                encodedContent = parts[1];
-                encodedSignatureInput = encodedHeader + '.' + encodedContent;
-                encodedContent = "";
-            
-                //content = Base64Url.decode(encodedContent);
-                if (parts.length > 2) {
-                    encodedSignature = parts[2];
-                    signature = Base64Url.decode(encodedSignature);
+            String[] parts = wire.split("\\.");
+            if (parts.length < 2 || parts.length > 3) throw new IllegalArgumentException("Parsing error");
+            encodedHeader = parts[0];
+            encodedContent = parts[1];
+            encodedSignatureInput = encodedHeader + '.' + encodedContent;
+            content = Base64Url.decode(encodedContent);
+            if (parts.length > 2) {
+                encodedSignature = parts[2];
+                signature = Base64Url.decode(encodedSignature);
 
-                }
-                byte[] headerBytes = Base64Url.decode(encodedHeader);
-                header = JsonSerialization.readValue(headerBytes, JWSHeader.class);
             }
+            byte[] headerBytes = Base64Url.decode(encodedHeader);
+            header = JsonSerialization.readValue(headerBytes, JWSHeader.class);
         } catch (Throwable t) {
             throw new JWSInputException(t);
         }
