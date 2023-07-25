@@ -186,6 +186,8 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     @Override
     protected Response exchangeStoredToken(UriInfo uriInfo, EventBuilder event, ClientModel authorizedClient,
             UserSessionModel tokenUserSession, UserModel tokenSubject) {
+                logger.error("exchangeStoredToken 0");
+        logger.error(getConfig().getClientId());
         FederatedIdentityModel model = session.users().getFederatedIdentity(authorizedClient.getRealm(), tokenSubject,getConfig().getAlias());
         logger.error("exchangeStoredToken 1");
         logger.error(getConfig().getClientId());
