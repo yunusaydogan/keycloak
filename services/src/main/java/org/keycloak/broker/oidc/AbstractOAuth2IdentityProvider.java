@@ -502,14 +502,19 @@ public abstract class AbstractOAuth2IdentityProvider<C extends OAuth2IdentityPro
                     BrokeredIdentityContext federatedIdentity = getFederatedIdentity(response);
                     logger.error("federatedIdentity bdb 2");
                     if (getConfig().isStoreToken()) {
+                        logger.error("federatedIdentity bdb 3");
                         // make sure that token wasn't already set by getFederatedIdentity();
                         // want to be able to allow provider to set the token itself.
                         if (federatedIdentity.getToken() == null)federatedIdentity.setToken(response);
+                        logger.error("federatedIdentity bdb 3");
                     }
-
+                    logger.error("federatedIdentity bdb 4");
                     federatedIdentity.setIdpConfig(getConfig());
+                    logger.error("federatedIdentity bdb 5");
                     federatedIdentity.setIdp(AbstractOAuth2IdentityProvider.this);
+                    logger.error("federatedIdentity bdb 6");
                     federatedIdentity.setAuthenticationSession(authSession);
+                    logger.error("federatedIdentity bdb 7");
 
                     return callback.authenticated(federatedIdentity);
                 }
