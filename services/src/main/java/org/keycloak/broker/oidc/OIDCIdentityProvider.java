@@ -69,6 +69,15 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+
+import org.keycloak.broker.oidc.AbstractOAuth2IdentityProvider;
+import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.util.Iterator;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
