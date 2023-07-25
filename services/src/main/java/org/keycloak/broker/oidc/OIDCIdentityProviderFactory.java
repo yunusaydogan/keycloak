@@ -41,18 +41,15 @@ public class OIDCIdentityProviderFactory extends AbstractIdentityProviderFactory
 
     @Override
     public OIDCIdentityProvider create(KeycloakSession session, IdentityProviderModel model) {
-        return new OIDCIdentityProvider(session, new OAuth2IdentityProviderConfig(model));
+        return new OIDCIdentityProvider(session, new OIDCIdentityProviderConfig(model));
     }
 
-    // @Override
-    // public OIDCIdentityProviderConfig createConfig() {
-    //     return new OIDCIdentityProviderConfig();
-    // }
+     @Override
+     public OIDCIdentityProviderConfig createConfig() {
+         return new OIDCIdentityProviderConfig();
+     }
 
-    	@Override
-	public OAuth2IdentityProviderConfig createConfig() {
-		return new OAuth2IdentityProviderConfig();
-	}
+    
 
     @Override
     public String getId() {
