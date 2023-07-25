@@ -16,6 +16,7 @@
  */
 package org.keycloak.broker.oidc;
 
+import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
 import org.keycloak.broker.provider.AbstractIdentityProviderFactory;
 import org.keycloak.models.IdentityProviderModel;
 import org.keycloak.models.KeycloakSession;
@@ -40,13 +41,18 @@ public class OIDCIdentityProviderFactory extends AbstractIdentityProviderFactory
 
     @Override
     public OIDCIdentityProvider create(KeycloakSession session, IdentityProviderModel model) {
-        return new OIDCIdentityProvider(session, new OIDCIdentityProviderConfig(model));
+        return new OIDCIdentityProvider(session, new OAuth2IdentityProviderConfig(model));
     }
 
-    @Override
-    public OIDCIdentityProviderConfig createConfig() {
-        return new OIDCIdentityProviderConfig();
-    }
+    // @Override
+    // public OIDCIdentityProviderConfig createConfig() {
+    //     return new OIDCIdentityProviderConfig();
+    // }
+
+    	@Override
+	public OAuth2IdentityProviderConfig createConfig() {
+		return new OAuth2IdentityProviderConfig();
+	}
 
     @Override
     public String getId() {
