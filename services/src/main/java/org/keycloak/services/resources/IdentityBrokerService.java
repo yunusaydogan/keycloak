@@ -512,8 +512,13 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
         }
 
         session.getContext().setClient(authenticationSession.getClient());
-
+        logger.error("authenticated bdb 1");
+        logger.error(authenticationSession.getClient());
+        logger.error(session);
+        logger.error(realmModel);
+        logger.error(context);
         context.getIdp().preprocessFederatedIdentity(session, realmModel, context);
+         logger.error("authenticated bdb 2");
         KeycloakSessionFactory sessionFactory = session.getKeycloakSessionFactory();
         realmModel.getIdentityProviderMappersByAliasStream(context.getIdpConfig().getAlias()).forEach(mapper -> {
             IdentityProviderMapper target = (IdentityProviderMapper) sessionFactory

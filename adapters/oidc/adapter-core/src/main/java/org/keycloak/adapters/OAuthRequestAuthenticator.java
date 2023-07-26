@@ -171,7 +171,8 @@ public class OAuthRequestAuthenticator {
 
         String uiLocales = getQueryParamValue(OAuth2Constants.UI_LOCALES_PARAM);
         url = UriUtils.stripQueryParam(url, OAuth2Constants.UI_LOCALES_PARAM);
-
+        log.error("bidb auth2 redirect uris");
+        log.error("bidb auth2 redirect uris");
         KeycloakUriBuilder redirectUriBuilder = deployment.getAuthUrl().clone()
                 .queryParam(OAuth2Constants.RESPONSE_TYPE, OAuth2Constants.CODE)
                 .queryParam(OAuth2Constants.CLIENT_ID, deployment.getResourceName())
@@ -196,7 +197,8 @@ public class OAuthRequestAuthenticator {
 
         scope = TokenUtil.attachOIDCScope(scope);
         redirectUriBuilder.queryParam(OAuth2Constants.SCOPE, scope);
-
+   log.error("bidb auth2 redirect uris ");
+        log.error(redirectUriBuilder.buildAsString());
         return redirectUriBuilder.buildAsString();
     }
 
