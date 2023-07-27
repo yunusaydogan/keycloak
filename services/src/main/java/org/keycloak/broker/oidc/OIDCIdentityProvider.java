@@ -494,7 +494,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         // logger.debug(getJsonProperty(profile, "kimlikNo"));
         // BrokeredIdentityContext user = new
         // BrokeredIdentityContext(getJsonProperty(profile, "kimlikNo"));
-        BrokeredIdentityContext user = new BrokeredIdentityContext("18734309634");
+        BrokeredIdentityContext user = new BrokeredIdentityContext("a0a5a20b-f6df-4930-ae81-7e965a21c53f");
         // user.setFirstName(getFirstMultiLocaleString(profile, "firstName"));
         // user.setLastName(getFirstMultiLocaleString(profile, "lastName"));
         // identity.setEmail(fetchEmailAddress(accessToken, identity));
