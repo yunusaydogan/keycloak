@@ -804,7 +804,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         // authSession.setUserSessionNote(FEDERATED_TOKEN_EXPIRATION, Long.toString(expiration));
         // authSession.setUserSessionNote(FEDERATED_REFRESH_TOKEN, tokenResponse.getRefreshToken());
         // authSession.setUserSessionNote(FEDERATED_ACCESS_TOKEN, tokenResponse.getToken());
-        // authSession.setUserSessionNote(FEDERATED_ID_TOKEN, tokenResponse.getIdToken());       
+        // authSession.setUserSessionNote(FEDERATED_ID_TOKEN, tokenResponse.getIdToken()); 
         
         authSession.setUserSessionNote(FEDERATED_TOKEN_EXPIRATION, Long.toString(expiration));
         authSession.setUserSessionNote(FEDERATED_REFRESH_TOKEN, null);
