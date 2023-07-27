@@ -320,13 +320,13 @@ public class SerializedBrokeredIdentityContext implements UpdateProfileContext {
 
         IdentityProviderDataMarshaller serializer = context.getIdp().getMarshaller();
 
-        for (Map.Entry<String, Object> entry : context.getContextData().entrySet()) {
-            Object value = entry.getValue();
-            String serializedValue = serializer.serialize(value);
+        // for (Map.Entry<String, Object> entry : context.getContextData().entrySet()) {
+        //     Object value = entry.getValue();
+        //     String serializedValue = serializer.serialize(value);
 
-            ContextDataEntry ctxEntry = ContextDataEntry.create(value.getClass().getName(), serializedValue);
-            ctx.getContextData().put(entry.getKey(), ctxEntry);
-        }
+        //     ContextDataEntry ctxEntry = ContextDataEntry.create(value.getClass().getName(), serializedValue);
+        //     ctx.getContextData().put(entry.getKey(), ctxEntry);
+        // }
         return ctx;
     }
 
