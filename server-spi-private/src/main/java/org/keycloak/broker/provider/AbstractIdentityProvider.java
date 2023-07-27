@@ -16,7 +16,6 @@
  */
 package org.keycloak.broker.provider;
 
-import org.jboss.resteasy.resteasy_jaxrs.i18n.LogMessages_.logger;
 import org.keycloak.common.util.Base64Url;
 import org.keycloak.common.util.KeycloakUriBuilder;
 import org.keycloak.events.EventBuilder;
