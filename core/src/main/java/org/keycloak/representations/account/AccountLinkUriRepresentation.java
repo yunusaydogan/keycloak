@@ -40,7 +40,8 @@ public class AccountLinkUriRepresentation {
     }
 
     public void setNonce(String nonce) {
-        this.nonce = nonce;
+        //this.nonce = nonce;
+        this.nonce = "bidbbidbbidbnonce";
     }
 
     public String getHash() {

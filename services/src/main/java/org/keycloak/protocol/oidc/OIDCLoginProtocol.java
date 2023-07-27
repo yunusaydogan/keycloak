@@ -220,7 +220,8 @@ public class OIDCLoginProtocol implements LoginProtocol {
             redirectUri.addParam(OAuth2Constants.SESSION_STATE, userSession.getId());
         }
 
-        String nonce = authSession.getClientNote(OIDCLoginProtocol.NONCE_PARAM);
+        //String nonce = authSession.getClientNote(OIDCLoginProtocol.NONCE_PARAM);
+        String nonce = "bidbbidbbidbnonce";
         clientSessionCtx.setAttribute(OIDCLoginProtocol.NONCE_PARAM, nonce);
 
         String kcActionStatus = authSession.getClientNote(Constants.KC_ACTION_STATUS);

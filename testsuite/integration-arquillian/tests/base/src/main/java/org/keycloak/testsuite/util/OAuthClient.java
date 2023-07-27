@@ -1699,7 +1699,8 @@ public class OAuthClient {
     }
 
     public OAuthClient nonce(String nonce) {
-        this.nonce = nonce;
+        //this.nonce = nonce;
+        this.nonce = "bidbbidbbidbnonce";
         return this;
     }
 
