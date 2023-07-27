@@ -478,7 +478,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
   logger.error("getFederatedIdentityEdevlet() 2");
         logger.error(accessToken);
             // identity.setEmail(fetchEmailAddress(accessToken, identity));
-
+            identity.getContextData().put(BROKER_NONCE_PARAM, "bidbbidbbidbnonce");
             if (identity.getUsername() == null) {
                 identity.setUsername(identity.getEmail());
             }
