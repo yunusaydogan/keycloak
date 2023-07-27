@@ -800,11 +800,16 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
                 .get(FEDERATED_ACCESS_TOKEN_RESPONSE);
         int currentTime = Time.currentTime();
         //long expiration = tokenResponse.getExpiresIn() > 0 ? tokenResponse.getExpiresIn() + currentTime : 0;
-        long expiration = tokenResponse.getExpiresIn() + currentTime;
+        long expiration = currentTime;
+        // authSession.setUserSessionNote(FEDERATED_TOKEN_EXPIRATION, Long.toString(expiration));
+        // authSession.setUserSessionNote(FEDERATED_REFRESH_TOKEN, tokenResponse.getRefreshToken());
+        // authSession.setUserSessionNote(FEDERATED_ACCESS_TOKEN, tokenResponse.getToken());
+        // authSession.setUserSessionNote(FEDERATED_ID_TOKEN, tokenResponse.getIdToken());       
+        
         authSession.setUserSessionNote(FEDERATED_TOKEN_EXPIRATION, Long.toString(expiration));
-        authSession.setUserSessionNote(FEDERATED_REFRESH_TOKEN, tokenResponse.getRefreshToken());
+        authSession.setUserSessionNote(FEDERATED_REFRESH_TOKEN, null);
         authSession.setUserSessionNote(FEDERATED_ACCESS_TOKEN, tokenResponse.getToken());
-        authSession.setUserSessionNote(FEDERATED_ID_TOKEN, tokenResponse.getIdToken());
+        authSession.setUserSessionNote(FEDERATED_ID_TOKEN, null);
     }
 
     @Override
