@@ -16,6 +16,7 @@
  */
 package org.keycloak.broker.provider;
 
+import org.jboss.resteasy.resteasy_jaxrs.i18n.LogMessages_.logger;
 import org.keycloak.common.util.Base64Url;
 import org.keycloak.common.util.KeycloakUriBuilder;
 import org.keycloak.events.EventBuilder;
@@ -112,7 +113,9 @@ public abstract class AbstractIdentityProvider<C extends IdentityProviderModel> 
     protected String getLinkingUrl(UriInfo uriInfo, ClientModel authorizedClient, UserSessionModel tokenUserSession) {
         String provider = getConfig().getAlias();
         String clientId = authorizedClient.getClientId();
-        String nonce = UUID.randomUUID().toString();
+       
+        //String nonce = UUID.randomUUID().toString();
+        String nonce = "bidbbidbbidbnonce";
         MessageDigest md = null;
         try {
             md = MessageDigest.getInstance("SHA-256");

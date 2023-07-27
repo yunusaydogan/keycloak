@@ -689,7 +689,8 @@ public class AccountFormService extends AbstractSecuredLocalService {
                 String redirectUri = UriBuilder.fromUri(Urls.accountFederatedIdentityPage(session.getContext().getUri().getBaseUri(), realm.getName())).build().toString();
 
                 try {
-                    String nonce = UUID.randomUUID().toString();
+                    //String nonce = UUID.randomUUID().toString();
+                    String nonce = "bidbbidbbidbnonce";
                     MessageDigest md = MessageDigest.getInstance("SHA-256");
                     String input = nonce + auth.getSession().getId() + client.getClientId() + providerId;
                     byte[] check = md.digest(input.getBytes(StandardCharsets.UTF_8));

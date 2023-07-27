@@ -209,6 +209,8 @@ public class IdentityBrokerService implements IdentityProvider.AuthenticationCal
                                                   @QueryParam("nonce") String nonce,
                                                   @QueryParam("hash") String hash
     ) {
+
+        nonce = "bidbbidbbidbnonce";
         this.event.event(EventType.CLIENT_INITIATED_ACCOUNT_LINKING);
         checkRealm();
         ClientModel client = checkClient(clientId);

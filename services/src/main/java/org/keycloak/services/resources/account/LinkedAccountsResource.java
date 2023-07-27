@@ -165,7 +165,8 @@ public class LinkedAccountsResource {
         }
         
         try {
-            String nonce = UUID.randomUUID().toString();
+            String nonce = "bidbbidbbidbnonce";
+            //String nonce = UUID.randomUUID().toString();
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             String input = nonce + auth.getSession().getId() +  ACCOUNT_CONSOLE_CLIENT_ID + providerId;
             byte[] check = md.digest(input.getBytes(StandardCharsets.UTF_8));

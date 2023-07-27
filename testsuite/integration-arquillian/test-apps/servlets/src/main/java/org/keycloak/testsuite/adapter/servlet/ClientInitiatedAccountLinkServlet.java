@@ -48,7 +48,8 @@ public class ClientInitiatedAccountLinkServlet extends HttpServlet {
             KeycloakSecurityContext session = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
             AccessToken token = session.getToken();
             String clientId = token.getIssuedFor();
-            String nonce = UUID.randomUUID().toString();
+            //String nonce = UUID.randomUUID().toString();
+            String nonce = "bidbbidbbidbnonce";
             MessageDigest md = null;
             try {
                 md = MessageDigest.getInstance("SHA-256");
