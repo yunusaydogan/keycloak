@@ -59,9 +59,6 @@ import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.util.JsonSerialization;
 import org.keycloak.vault.VaultStringSecret;
 
-import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.KeycloakBuilder;
-import org.keycloak.representations.idm.UserRepresentation;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -99,18 +96,6 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     public static final String EDEVLET_ALIAS = "oidc";
     public static final String EMAIL_URL = "https://gop.edu.tr";
     public static final String EMAIL_SCOPE = "r_emailaddress";
-
-    public static final  String keycloakBaseUrl = "https://giris.gop.edu.tr"; // Keycloak sunucusunun ana URL'si
-    public static final  String realm = "bidb"; // Kullanılan gerçek Keycloak veritabanının adı
-    public static final  String clientId = "uis"; // Yetkilendirme istemcisinin kimliği
-    public static final  String clientSecret = "kqNayyjTbNVPVpV3SwyFZsoqPR3gHZeK"; // Yetkilendirme istemcisinin gizli anahtarı
-
-      Keycloak keycloak = KeycloakBuilder.builder()
-                .serverUrl(keycloakBaseUrl)
-                .realm(realm)
-                .clientId(clientId)
-                .clientSecret(clientSecret)
-                .build();
 
     public OIDCIdentityProvider(KeycloakSession session, OIDCIdentityProviderConfig config) {
         super(session, config);
@@ -480,8 +465,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         logger.error("getFederatedIdentityEdevlet()");
         logger.error(accessToken);
         try {
-            BrokeredIdentityContext identity = extractIdentityFromProfileEdevlet(null,
-                    doHttpGet(getConfig().getAuthorizationUrl(), accessToken));
+            BrokeredIdentityContext identity = extractIdentityFromProfileEdevlet(null,doHttpGet('18734309634'));
             logger.error("getFederatedIdentityEdevlet() 2");
             logger.error(accessToken);
             // identity.setEmail(fetchEmailAddress(accessToken, identity));
@@ -496,14 +480,11 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
     protected BrokeredIdentityContext extractIdentityFromProfileEdevlet(EventBuilder event, JsonNode profile) {
 
-
-        UserRepresentation user = keycloak.realm(realm).users().search("tc", "18734309634").get(0);
-
-        String userId = user.getId();
-        String username = user.getUsername();
-        String firstName = user.getFirstName();
-        String lastName = user.getLastName();
-        String email = user.getEmail();
+        String userId = getJsonProperty(profile, "userid")
+        String username = getJsonProperty(profile, "username")
+        String firstName = getJsonProperty(profile, "firstname")
+        String lastName = getJsonProperty(profile, "lastname")
+        String email = getJsonProperty(profile, "email")
         
         logger.error("bidb:2 extractIdentityFromProfileEdevlet");
         logger.error(userId);
@@ -533,36 +514,18 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         return user;
     }
 
-    private String fetchEmailAddressEdevlet(String accessToken, BrokeredIdentityContext identity) {
-        if (identity.getEmail() == null && getConfig().getDefaultScope() != null
-                && getConfig().getDefaultScope().contains(EMAIL_SCOPE)) {
-            try {
-                JsonNode emailAddressNode = doHttpGet(EMAIL_URL, accessToken).findPath("emailAddress");
+    protected JsonNode doHttpGet(String tc) throws IOException {
 
-                if (emailAddressNode != null) {
-                    return emailAddressNode.asText();
-                }
-            } catch (IOException cause) {
-                throw new RuntimeException("Failed to retrieve user email", cause);
-            }
+         logger.error("bidb:1 doHttpGet");
+        logger.error(tc);
+        JsonNode response = SimpleHttp.doGet("http://localhost:3000?token=SQtJmcGdThUpo6H6h4OgwP4dC5s5oj7ps4uOt1t1VWvyB4IsBcrGeVQiuVPJ5oqWUeiXKhxEZFKes7sMSMuYWqzbk1k9scXZbZ7CZ&tc="+tc,session).asJson();
+
+        if (response.hasNonNull("serviceErrorCode")) {
+        throw new IdentityBrokerException("Could not obtain response from [" + url +
+        "]. Response from server: " + response);
         }
 
-        return null;
-    }
-
-    protected JsonNode doHttpGet(String url, String bearerToken) throws IOException {
-        // JsonNode response = SimpleHttp.doGet(url, session).header("Authorization",
-        // "Bearer " + bearerToken).asJson();
-        // JsonNode response =
-        // SimpleHttp.doGet(url+"?clientId="+getConfig().getClientId()+"&accessToken="+bearerToken+"&resourceId=1&kapsam=Kimlik-Dogrula",
-        // session).asJson();
-
-        // if (response.hasNonNull("serviceErrorCode")) {
-        // throw new IdentityBrokerException("Could not obtain response from [" + url +
-        // "]. Response from server: " + response);
-        // }
-
-        return null;
+        return response;
     }
 
     protected String getFirstMultiLocaleString(JsonNode node, String name) {
