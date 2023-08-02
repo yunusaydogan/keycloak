@@ -105,10 +105,14 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         
         // bidb edevlet için openid scope ekleme
         if (config.getAlias() == "edevlet") { 
-           SCOPE_OPENID = "";
-        }
+            SCOPE_OPENID = "";
+            logger.error("bidb scope 2");
+            logger.error(SCOPE_OPENID);
+       }
         if (!defaultScope.contains(SCOPE_OPENID)) {
             config.setDefaultScope((SCOPE_OPENID + " " + defaultScope).trim());
+            logger.error("bidb scope 3");
+            logger.error(SCOPE_OPENID);
         }
         logger.error("bidb scope");
         logger.error(config.getDefaultScope());
@@ -419,6 +423,10 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
         String encodedIdToken = tokenResponse.getIdToken();
 
+
+        logger.error("getFederatedIdentity()");
+        logger.error(encodedIdToken);
+
         if (getConfig().getAlias() == "edevlet") {
             return getFederatedIdentityEdevlet(accessToken);
         } else {
@@ -427,12 +435,10 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
                 BrokeredIdentityContext identity = extractIdentity(tokenResponse, accessToken, idToken);
 
                 if (!identity.getId().equals(idToken.getSubject())) {
-                    throw new IdentityBrokerException(
-                            "Mismatch between the subject in the id_token and the subject from the user_info endpoint");
+                    throw new IdentityBrokerException("Mismatch between the subject in the id_token and the subject from the user_info endpoint");
                 }
 
-                identity.getContextData().put(BROKER_NONCE_PARAM,
-                        idToken.getOtherClaims().get(OIDCLoginProtocol.NONCE_PARAM));
+                identity.getContextData().put(BROKER_NONCE_PARAM, idToken.getOtherClaims().get(OIDCLoginProtocol.NONCE_PARAM));
 
                 if (getConfig().isStoreToken()) {
                     if (tokenResponse.getExpiresIn() > 0) {
@@ -974,11 +980,16 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
             String nonce = (String) context.getContextData().get(BROKER_NONCE_PARAM);
 
+            logger.error("preprocessFederatedIdentity  1");
+            logger.error(nonce);
+
             if (nonce == null) {
                 throw new IdentityBrokerException("OpenID Provider [" + getConfig().getProviderId() + "] did not return a nonce");
             }
 
             String expectedNonce = authenticationSession.getClientNote(BROKER_NONCE_PARAM);
+            logger.error("preprocessFederatedIdentity expectedNonce");
+            logger.error(expectedNonce);
 
             if (!nonce.equals(expectedNonce)) {
                 throw new ErrorResponseException(OAuthErrorException.INVALID_TOKEN, "invalid nonce", Response.Status.BAD_REQUEST);

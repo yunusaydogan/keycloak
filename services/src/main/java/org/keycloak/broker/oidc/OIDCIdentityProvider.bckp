@@ -106,9 +106,13 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         // bidb edevlet için openid scope ekleme
         if (config.getAlias() == "edevlet") { 
            SCOPE_OPENID = "";
+            logger.error("bidb scope 2");
+            logger.error(SCOPE_OPENID);
         }
         if (!defaultScope.contains(SCOPE_OPENID)) {
             config.setDefaultScope((SCOPE_OPENID + " " + defaultScope).trim());
+            logger.error("bidb scope 3");
+            logger.error(SCOPE_OPENID);
         }
         logger.error("bidb scope");
         logger.error(config.getDefaultScope());
@@ -423,7 +427,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         logger.error("getFederatedIdentity()");
         logger.error(encodedIdToken);
 
-        if (encodedIdToken == null) {
+        if (getConfig().getAlias() == "edevlet") {
             return getFederatedIdentityEdevlet(accessToken);
         } else {
         JsonWebToken idToken = validateToken(encodedIdToken);
@@ -991,7 +995,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         }
 
         String expectedNonce = authenticationSession.getClientNote(BROKER_NONCE_PARAM);
-        logger.error("preprocessFederatedIdentity  3");
+        logger.error("preprocessFederatedIdentity expectedNonce");
         logger.error(expectedNonce);
 
         if (!nonce.equals(expectedNonce)) {
