@@ -100,7 +100,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         String defaultScope = config.getDefaultScope();
 
 
-        if (!defaultScope.contains(SCOPE_OPENID) && config.getAlias() != 'edevlet') { // bidb edevlet için openid scope ekleme
+        if (!defaultScope.contains(SCOPE_OPENID) && config.getAlias() != "edevlet") { // bidb edevlet için openid scope ekleme
             config.setDefaultScope((SCOPE_OPENID + " " + defaultScope).trim());
         }
     }
@@ -404,7 +404,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
         String encodedIdToken = tokenResponse.getIdToken();
 
-        if (getConfig().getAlias() == 'edevlet') {
+        if (getConfig().getAlias() == "edevlet") {
             return getFederatedIdentityEdevlet(accessToken);
         } else {
             JsonWebToken idToken = validateToken(encodedIdToken);
@@ -744,7 +744,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     public void authenticationFinished(AuthenticationSessionModel authSession, BrokeredIdentityContext context) {
         AccessTokenResponse tokenResponse = (AccessTokenResponse) context.getContextData().get(FEDERATED_ACCESS_TOKEN_RESPONSE);
         
-        if (getConfig().getAlias() == 'edevlet') {
+        if (getConfig().getAlias() == "edevlet") {
             int currentTime = Time.currentTime();
             long expiration = currentTime;
             authSession.setUserSessionNote(FEDERATED_TOKEN_EXPIRATION, Long.toString(expiration));
@@ -948,7 +948,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
     @Override
     public void preprocessFederatedIdentity(KeycloakSession session, RealmModel realm, BrokeredIdentityContext context) {
-        if (getConfig().getAlias() != 'edevlet') {
+        if (getConfig().getAlias() != "edevlet") {
             AuthenticationSessionModel authenticationSession = session.getContext().getAuthenticationSession();
             
             if (authenticationSession == null) {
