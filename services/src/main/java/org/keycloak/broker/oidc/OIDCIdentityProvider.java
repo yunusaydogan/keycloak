@@ -59,6 +59,10 @@ import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.util.JsonSerialization;
 import org.keycloak.vault.VaultStringSecret;
 
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.KeycloakBuilder;
+import org.keycloak.representations.idm.UserRepresentation;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
@@ -95,6 +99,18 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     public static final String EDEVLET_ALIAS = "oidc";
     public static final String EMAIL_URL = "https://gop.edu.tr";
     public static final String EMAIL_SCOPE = "r_emailaddress";
+
+    public static final  String keycloakBaseUrl = "https://giris.gop.edu.tr"; // Keycloak sunucusunun ana URL'si
+    public static final  String realm = "bidb"; // Kullanılan gerçek Keycloak veritabanının adı
+    public static final  String clientId = "uis"; // Yetkilendirme istemcisinin kimliği
+    public static final  String clientSecret = "kqNayyjTbNVPVpV3SwyFZsoqPR3gHZeK"; // Yetkilendirme istemcisinin gizli anahtarı
+
+      Keycloak keycloak = KeycloakBuilder.builder()
+                .serverUrl(keycloakBaseUrl)
+                .realm(realm)
+                .clientId(clientId)
+                .clientSecret(clientSecret)
+                .build();
 
     public OIDCIdentityProvider(KeycloakSession session, OIDCIdentityProviderConfig config) {
         super(session, config);
@@ -470,9 +486,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
             logger.error(accessToken);
             // identity.setEmail(fetchEmailAddress(accessToken, identity));
             identity.getContextData().put(BROKER_NONCE_PARAM, "bidbbidbbidbnonce");
-            if (identity.getUsername() == null) {
-                identity.setUsername(identity.getEmail());
-            }
+           
 
             return identity;
         } catch (Exception e) {
@@ -481,19 +495,36 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     }
 
     protected BrokeredIdentityContext extractIdentityFromProfileEdevlet(EventBuilder event, JsonNode profile) {
-        logger.debug("bidb:2");
+
+
+        UserRepresentation user = keycloak.realm(realm).users().search("tc", "18734309634").get(0);
+
+        String userId = user.getId();
+        String username = user.getUsername();
+        String firstName = user.getFirstName();
+        String lastName = user.getLastName();
+        String email = user.getEmail();
+        
+        logger.error("bidb:2 extractIdentityFromProfileEdevlet");
+        logger.error(userId);
+        logger.error(username);
+        logger.error(firstName);
+        logger.error(lastName);
+        logger.error(email);
+
+        BrokeredIdentityContext user = new BrokeredIdentityContext(userId);
         // logger.debug(getJsonProperty(profile, "kimlikNo"));
         // BrokeredIdentityContext user = new
         // BrokeredIdentityContext(getJsonProperty(profile, "kimlikNo"));
-        BrokeredIdentityContext user = new BrokeredIdentityContext("a0a5a20b-f6df-4930-ae81-7e965a21c53f");
+   
         // user.setFirstName(getFirstMultiLocaleString(profile, "firstName"));
         // user.setLastName(getFirstMultiLocaleString(profile, "lastName"));
         // identity.setEmail(fetchEmailAddress(accessToken, identity));
 
-        user.setUsername("yunus.aydogan");
-        user.setFirstName("YUNUS");
-        user.setLastName("AYDOĞAN");
-        user.setEmail("yunus.aydogan@gop.edu.tr");
+        user.setUsername(username);
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setEmail(email);
         user.setIdpConfig(getConfig());
         user.setIdp(this);
 
