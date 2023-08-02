@@ -92,6 +92,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     private static final String BROKER_NONCE_PARAM = "BROKER_NONCE";
     
     //bidb edevlet oauth2 değişkenleri
+    public static final String EDEVLET_ALIAS = "oidc";
     public static final String EMAIL_URL = "https://gop.edu.tr";
     public static final String EMAIL_SCOPE = "r_emailaddress";
 
@@ -106,15 +107,8 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         logger.error(config.getAlias());
         
         // bidb edevlet için openid scope ekleme
-        if (config.getAlias() == "edevlet") { 
+        if (config.getAlias().equals(EDEVLET_ALIAS)) { 
             SCOPE_OPENID = "";
-            logger.error("bidb SCOPE_OPENID 2");
-            logger.error(SCOPE_OPENID);
-        }
-        if (config.getAlias().equals("edevlet") ) { 
-            SCOPE_OPENID = "";
-            logger.error("bidb SCOPE_OPENID equals 2");
-            logger.error(SCOPE_OPENID);
         }
         if (!defaultScope.contains(SCOPE_OPENID)) {
             config.setDefaultScope((SCOPE_OPENID + " " + defaultScope).trim());
@@ -206,7 +200,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         logger.error(getConfig().getClientId());
         
         //bidb edevlet oauth2 yönelendirmesi
-        if(getConfig().getAlias() == "edevlet") {
+        if (config.getAlias().equals(EDEVLET_ALIAS)) { 
             
             if (model == null || model.getToken() == null) {
                 event.detail(Details.REASON, "requested_issuer is not linked");
@@ -435,7 +429,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         logger.error("getFederatedIdentity()");
         logger.error(encodedIdToken);
 
-        if (getConfig().getAlias() == "edevlet") {
+        if (config.getAlias().equals(EDEVLET_ALIAS)) { 
             return getFederatedIdentityEdevlet(accessToken);
         } else {
             JsonWebToken idToken = validateToken(encodedIdToken);
@@ -774,7 +768,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     public void authenticationFinished(AuthenticationSessionModel authSession, BrokeredIdentityContext context) {
         AccessTokenResponse tokenResponse = (AccessTokenResponse) context.getContextData().get(FEDERATED_ACCESS_TOKEN_RESPONSE);
         
-        if (getConfig().getAlias() == "edevlet") {
+        if (config.getAlias().equals(EDEVLET_ALIAS)) { 
             int currentTime = Time.currentTime();
             long expiration = currentTime;
             authSession.setUserSessionNote(FEDERATED_TOKEN_EXPIRATION, Long.toString(expiration));
@@ -978,7 +972,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
     @Override
     public void preprocessFederatedIdentity(KeycloakSession session, RealmModel realm, BrokeredIdentityContext context) {
-        if (getConfig().getAlias() != "edevlet") {
+        if (!config.getAlias().equals(EDEVLET_ALIAS)) { 
             AuthenticationSessionModel authenticationSession = session.getContext().getAuthenticationSession();
             
             if (authenticationSession == null) {
