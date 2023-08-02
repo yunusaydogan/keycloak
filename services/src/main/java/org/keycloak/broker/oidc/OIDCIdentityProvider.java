@@ -73,7 +73,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import static org.keycloak.utils.LockObjectsForModification.lockUserSessionsForModification;
-import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * @author Pedro Igor
@@ -517,7 +516,6 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
             if (localized != null) {
                 Iterator<JsonNode> iterator = localized.iterator();
-
                 if (iterator.hasNext()) {
                     return iterator.next().asText();
                 }
