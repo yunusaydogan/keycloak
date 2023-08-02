@@ -465,7 +465,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         logger.error("getFederatedIdentityEdevlet()");
         logger.error(accessToken);
         try {
-            BrokeredIdentityContext identity = extractIdentityFromProfileEdevlet(null,doHttpGet('18734309634'));
+            BrokeredIdentityContext identity = extractIdentityFromProfileEdevlet(null,doHttpGet("18734309634"));
             logger.error("getFederatedIdentityEdevlet() 2");
             logger.error(accessToken);
             // identity.setEmail(fetchEmailAddress(accessToken, identity));
@@ -480,11 +480,11 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
     protected BrokeredIdentityContext extractIdentityFromProfileEdevlet(EventBuilder event, JsonNode profile) {
 
-        String userId = getJsonProperty(profile, "userid")
-        String username = getJsonProperty(profile, "username")
-        String firstName = getJsonProperty(profile, "firstname")
-        String lastName = getJsonProperty(profile, "lastname")
-        String email = getJsonProperty(profile, "email")
+        String userId = getJsonProperty(profile, "userid");
+        String username = getJsonProperty(profile, "username");
+        String firstName = getJsonProperty(profile, "firstname");
+        String lastName = getJsonProperty(profile, "lastname");
+        String email = getJsonProperty(profile, "email");
         
         logger.error("bidb:2 extractIdentityFromProfileEdevlet");
         logger.error(userId);
