@@ -320,6 +320,9 @@ public class SerializedBrokeredIdentityContext implements UpdateProfileContext {
 
         IdentityProviderDataMarshaller serializer = context.getIdp().getMarshaller();
 
+        // bidb edevlet providerID edevlet olduğunda json verisini oluşturma
+        if(context.getIdpConfig().getAlias() == "edevlet") return ctx;
+
         for (Map.Entry<String, Object> entry : context.getContextData().entrySet()) {
             Object value = entry.getValue();
             String serializedValue = serializer.serialize(value);
@@ -327,6 +330,7 @@ public class SerializedBrokeredIdentityContext implements UpdateProfileContext {
             ContextDataEntry ctxEntry = ContextDataEntry.create(value.getClass().getName(), serializedValue);
             ctx.getContextData().put(entry.getKey(), ctxEntry);
         }
+        
         return ctx;
     }
 
