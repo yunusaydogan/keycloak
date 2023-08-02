@@ -82,7 +82,7 @@ import java.util.Iterator;
 public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIdentityProviderConfig> implements ExchangeExternalToken {
     protected static final Logger logger = Logger.getLogger(OIDCIdentityProvider.class);
 
-    public static final String SCOPE_OPENID = "openid";
+    public static String SCOPE_OPENID = "openid";
     public static final String FEDERATED_ID_TOKEN = "FEDERATED_ID_TOKEN";
     public static final String USER_INFO = "UserInfo";
     public static final String FEDERATED_ACCESS_TOKEN_RESPONSE = "FEDERATED_ACCESS_TOKEN_RESPONSE";
@@ -188,12 +188,13 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     @Override
     protected Response exchangeStoredToken(UriInfo uriInfo, EventBuilder event, ClientModel authorizedClient, UserSessionModel tokenUserSession, UserModel tokenSubject) {
         FederatedIdentityModel model = session.users().getFederatedIdentity(authorizedClient.getRealm(), tokenSubject, getConfig().getAlias());
-        logger.error("exchangeStoredToken 2");
+
+        logger.error("clientID 39337db8-4aaa-4c61-82ec-a12140f12395");
+        logger.error(getConfig().getAlias());
+        logger.error(getConfig().getClientId());
         
         //bidb edevlet oauth2 yönelendirmesi
         if(getConfig().getAlias() == "edevlet") {
-            logger.error(getConfig().getAlias());
-            logger.error(getConfig().getClientId());
             
             if (model == null || model.getToken() == null) {
                 event.detail(Details.REASON, "requested_issuer is not linked");
