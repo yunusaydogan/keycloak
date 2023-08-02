@@ -74,6 +74,8 @@ import java.nio.charset.StandardCharsets;
 
 import static org.keycloak.utils.LockObjectsForModification.lockUserSessionsForModification;
 
+import java.util.Iterator;
+
 /**
  * @author Pedro Igor
  */
@@ -509,18 +511,18 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     }
 
     protected String getFirstMultiLocaleString(JsonNode node, String name) {
-        // JsonNode claim = node.get(name);
+        JsonNode claim = node.get(name);
 
-        // if (claim != null) {
-        //     JsonNode localized = claim.get("localized");
+        if (claim != null) {
+            JsonNode localized = claim.get("localized");
 
-        //     if (localized != null) {
-        //         Iterator<JsonNode> iterator = localized.iterator();
-        //         if (iterator.hasNext()) {
-        //             return iterator.next().asText();
-        //         }
-        //     }
-        // }
+            if (localized != null) {
+                Iterator<JsonNode> iterator = localized.iterator();
+                if (iterator.hasNext()) {
+                    return iterator.next().asText();
+                }
+            }
+        }
 
         return null;
     }
