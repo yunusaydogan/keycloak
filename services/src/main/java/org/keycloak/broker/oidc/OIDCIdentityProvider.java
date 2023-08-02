@@ -100,22 +100,30 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
         String defaultScope = config.getDefaultScope();
 
-        logger.error("bidb scope");
+        logger.error("bidb getDefaultScope");
         logger.error(config.getDefaultScope());
+        logger.error("bidb getAlias");
+        logger.error(config.getAlias());
         
         // bidb edevlet için openid scope ekleme
         if (config.getAlias() == "edevlet") { 
             SCOPE_OPENID = "";
-            logger.error("bidb scope 2");
+            logger.error("bidb SCOPE_OPENID 2");
             logger.error(SCOPE_OPENID);
-       }
+        }
+        if (config.getAlias().equals("edevlet") ) { 
+            SCOPE_OPENID = "";
+            logger.error("bidb SCOPE_OPENID equals 2");
+            logger.error(SCOPE_OPENID);
+        }
         if (!defaultScope.contains(SCOPE_OPENID)) {
             config.setDefaultScope((SCOPE_OPENID + " " + defaultScope).trim());
             logger.error("bidb scope 3");
             logger.error(SCOPE_OPENID);
         }
-        logger.error("bidb scope");
+        logger.error("bidb getDefaultScope");
         logger.error(config.getDefaultScope());
+        logger.error("bidb getAlias");
         logger.error(config.getAlias());
     }
 
