@@ -90,23 +90,19 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     public static final String ACCESS_TOKEN_EXPIRATION = "accessTokenExpiration";
     public static final String EXCHANGE_PROVIDER = "EXCHANGE_PROVIDER";
     private static final String BROKER_NONCE_PARAM = "BROKER_NONCE";
-    
-    //bidb edevlet oauth2 değişkenleri
+
     public static final String EMAIL_URL = "https://gop.edu.tr";
     public static final String EMAIL_SCOPE = "r_emailaddress";
+    public static final String SCOPE_OPENID = "";
 
     public OIDCIdentityProvider(KeycloakSession session, OIDCIdentityProviderConfig config) {
         super(session, config);
 
         String defaultScope = config.getDefaultScope();
 
-
-        if (!defaultScope.contains(SCOPE_OPENID) && config.getAlias() != "edevlet") { // bidb edevlet için openid scope ekleme
+        if (!defaultScope.contains(SCOPE_OPENID)) {
             config.setDefaultScope((SCOPE_OPENID + " " + defaultScope).trim());
         }
-        logger.error("bidb scope");
-        logger.error(config.getDefaultScope());
-        logger.error(config.getAlias());
     }
 
     @Override
@@ -181,10 +177,18 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
     @Override
     protected Response exchangeStoredToken(UriInfo uriInfo, EventBuilder event, ClientModel authorizedClient, UserSessionModel tokenUserSession, UserModel tokenSubject) {
+
+        logger.error("exchangeStoredToken 0");
+        logger.error(getConfig().getClientId());
+
         FederatedIdentityModel model = session.users().getFederatedIdentity(authorizedClient.getRealm(), tokenSubject, getConfig().getAlias());
-        
-        //bidb edevlet oauth2 yönelendirmesi
-        if(getConfig().getAlias() == "edevlet") {
+
+        logger.error("exchangeStoredToken 1");
+        logger.error(getConfig().getClientId());
+
+        if (getConfig().getClientId() == "39337db8-4aaa-4c61-82ec-a12140f12395") {
+            logger.error("exchangeStoredToken 2");
+            logger.error(getConfig().getClientId());
             if (model == null || model.getToken() == null) {
                 event.detail(Details.REASON, "requested_issuer is not linked");
                 event.error(Errors.INVALID_TOKEN);
@@ -205,71 +209,73 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
             tokenResponse.setRefreshExpiresIn(0);
             tokenResponse.getOtherClaims().clear();
             tokenResponse.getOtherClaims().put(OAuth2Constants.ISSUED_TOKEN_TYPE, OAuth2Constants.ACCESS_TOKEN_TYPE);
-            tokenResponse.getOtherClaims().put(ACCOUNT_LINK_URL,getLinkingUrl(uriInfo, authorizedClient, tokenUserSession));
+            tokenResponse.getOtherClaims().put(ACCOUNT_LINK_URL,
+                    getLinkingUrl(uriInfo, authorizedClient, tokenUserSession));
             event.success();
             return Response.ok(tokenResponse).type(MediaType.APPLICATION_JSON_TYPE).build();
         } else {
-            if (model == null || model.getToken() == null) {
-                event.detail(Details.REASON, "requested_issuer is not linked");
-                event.error(Errors.INVALID_TOKEN);
-                return exchangeNotLinked(uriInfo, authorizedClient, tokenUserSession, tokenSubject);
-            }
-            try (VaultStringSecret vaultStringSecret = session.vault().getStringSecret(getConfig().getClientSecret())) {
-                String modelTokenString = model.getToken();
-                AccessTokenResponse tokenResponse = JsonSerialization.readValue(modelTokenString, AccessTokenResponse.class);
-                Integer exp = (Integer) tokenResponse.getOtherClaims().get(ACCESS_TOKEN_EXPIRATION);
-                if (exp != null && exp < Time.currentTime()) {
-                    if (tokenResponse.getRefreshToken() == null) {
-                        return exchangeTokenExpired(uriInfo, authorizedClient, tokenUserSession, tokenSubject);
-                    }
-                    String response = getRefreshTokenRequest(session, tokenResponse.getRefreshToken(),
-                            getConfig().getClientId(), vaultStringSecret.get().orElse(getConfig().getClientSecret())).asString();
-                    if (response.contains("error")) {
-                        logger.debugv("Error refreshing token, refresh token expiration?: {0}", response);
-                        model.setToken(null);
-                        session.users().updateFederatedIdentity(authorizedClient.getRealm(), tokenSubject, model);
-                        event.detail(Details.REASON, "requested_issuer token expired");
-                        event.error(Errors.INVALID_TOKEN);
-                        return exchangeTokenExpired(uriInfo, authorizedClient, tokenUserSession, tokenSubject);
-                    }
-                    AccessTokenResponse newResponse = JsonSerialization.readValue(response, AccessTokenResponse.class);
-                    if (newResponse.getExpiresIn() > 0) {
-                        int accessTokenExpiration = Time.currentTime() + (int) newResponse.getExpiresIn();
-                        newResponse.getOtherClaims().put(ACCESS_TOKEN_EXPIRATION, accessTokenExpiration);
-                    }
 
-                    if (newResponse.getRefreshToken() == null && tokenResponse.getRefreshToken() != null) {
-                        newResponse.setRefreshToken(tokenResponse.getRefreshToken());
-                        newResponse.setRefreshExpiresIn(tokenResponse.getRefreshExpiresIn());
-                    }
-                    response = JsonSerialization.writeValueAsString(newResponse);
-
-                    String oldToken = tokenUserSession.getNote(FEDERATED_ACCESS_TOKEN);
-                    if (oldToken != null && oldToken.equals(tokenResponse.getToken())) {
-                        int accessTokenExpiration = newResponse.getExpiresIn() > 0 ? Time.currentTime() + (int) newResponse.getExpiresIn() : 0;
-                        tokenUserSession.setNote(FEDERATED_TOKEN_EXPIRATION, Long.toString(accessTokenExpiration));
-                        tokenUserSession.setNote(FEDERATED_REFRESH_TOKEN, newResponse.getRefreshToken());
-                        tokenUserSession.setNote(FEDERATED_ACCESS_TOKEN, newResponse.getToken());
-                        tokenUserSession.setNote(FEDERATED_ID_TOKEN, newResponse.getIdToken());
-
-                    }
-                    model.setToken(response);
-                    tokenResponse = newResponse;
-                } else if (exp != null) {
-                    tokenResponse.setExpiresIn(exp - Time.currentTime());
-                }
-                tokenResponse.setIdToken(null);
-                tokenResponse.setRefreshToken(null);
-                tokenResponse.setRefreshExpiresIn(0);
-                tokenResponse.getOtherClaims().clear();
-                tokenResponse.getOtherClaims().put(OAuth2Constants.ISSUED_TOKEN_TYPE, OAuth2Constants.ACCESS_TOKEN_TYPE);
-                tokenResponse.getOtherClaims().put(ACCOUNT_LINK_URL, getLinkingUrl(uriInfo, authorizedClient, tokenUserSession));
-                event.success();
-                return Response.ok(tokenResponse).type(MediaType.APPLICATION_JSON_TYPE).build();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        if (model == null || model.getToken() == null) {
+            event.detail(Details.REASON, "requested_issuer is not linked");
+            event.error(Errors.INVALID_TOKEN);
+            return exchangeNotLinked(uriInfo, authorizedClient, tokenUserSession, tokenSubject);
         }
+        try (VaultStringSecret vaultStringSecret = session.vault().getStringSecret(getConfig().getClientSecret())) {
+            String modelTokenString = model.getToken();
+            AccessTokenResponse tokenResponse = JsonSerialization.readValue(modelTokenString, AccessTokenResponse.class);
+            Integer exp = (Integer) tokenResponse.getOtherClaims().get(ACCESS_TOKEN_EXPIRATION);
+            if (exp != null && exp < Time.currentTime()) {
+                if (tokenResponse.getRefreshToken() == null) {
+                    return exchangeTokenExpired(uriInfo, authorizedClient, tokenUserSession, tokenSubject);
+                }
+                String response = getRefreshTokenRequest(session, tokenResponse.getRefreshToken(),
+                        getConfig().getClientId(), vaultStringSecret.get().orElse(getConfig().getClientSecret())).asString();
+                if (response.contains("error")) {
+                    logger.debugv("Error refreshing token, refresh token expiration?: {0}", response);
+                    model.setToken(null);
+                    session.users().updateFederatedIdentity(authorizedClient.getRealm(), tokenSubject, model);
+                    event.detail(Details.REASON, "requested_issuer token expired");
+                    event.error(Errors.INVALID_TOKEN);
+                    return exchangeTokenExpired(uriInfo, authorizedClient, tokenUserSession, tokenSubject);
+                }
+                AccessTokenResponse newResponse = JsonSerialization.readValue(response, AccessTokenResponse.class);
+                if (newResponse.getExpiresIn() > 0) {
+                    int accessTokenExpiration = Time.currentTime() + (int) newResponse.getExpiresIn();
+                    newResponse.getOtherClaims().put(ACCESS_TOKEN_EXPIRATION, accessTokenExpiration);
+                }
+
+                if (newResponse.getRefreshToken() == null && tokenResponse.getRefreshToken() != null) {
+                    newResponse.setRefreshToken(tokenResponse.getRefreshToken());
+                    newResponse.setRefreshExpiresIn(tokenResponse.getRefreshExpiresIn());
+                }
+                response = JsonSerialization.writeValueAsString(newResponse);
+
+                String oldToken = tokenUserSession.getNote(FEDERATED_ACCESS_TOKEN);
+                if (oldToken != null && oldToken.equals(tokenResponse.getToken())) {
+                    int accessTokenExpiration = newResponse.getExpiresIn() > 0 ? Time.currentTime() + (int) newResponse.getExpiresIn() : 0;
+                    tokenUserSession.setNote(FEDERATED_TOKEN_EXPIRATION, Long.toString(accessTokenExpiration));
+                    tokenUserSession.setNote(FEDERATED_REFRESH_TOKEN, newResponse.getRefreshToken());
+                    tokenUserSession.setNote(FEDERATED_ACCESS_TOKEN, newResponse.getToken());
+                    tokenUserSession.setNote(FEDERATED_ID_TOKEN, newResponse.getIdToken());
+
+                }
+                model.setToken(response);
+                tokenResponse = newResponse;
+            } else if (exp != null) {
+                tokenResponse.setExpiresIn(exp - Time.currentTime());
+            }
+            tokenResponse.setIdToken(null);
+            tokenResponse.setRefreshToken(null);
+            tokenResponse.setRefreshExpiresIn(0);
+            tokenResponse.getOtherClaims().clear();
+            tokenResponse.getOtherClaims().put(OAuth2Constants.ISSUED_TOKEN_TYPE, OAuth2Constants.ACCESS_TOKEN_TYPE);
+            tokenResponse.getOtherClaims().put(ACCOUNT_LINK_URL, getLinkingUrl(uriInfo, authorizedClient, tokenUserSession));
+            event.success();
+            return Response.ok(tokenResponse).type(MediaType.APPLICATION_JSON_TYPE).build();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
     }
 
     private String getIDTokenForLogout(KeycloakSession session, UserSessionModel userSession) {
@@ -408,37 +414,42 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
         String encodedIdToken = tokenResponse.getIdToken();
 
-        if (getConfig().getAlias() == "edevlet") {
+
+        logger.error("getFederatedIdentity()");
+        logger.error(encodedIdToken);
+        if (encodedIdToken == null) {
             return getFederatedIdentityEdevlet(accessToken);
         } else {
-            JsonWebToken idToken = validateToken(encodedIdToken);
-            try {
-                BrokeredIdentityContext identity = extractIdentity(tokenResponse, accessToken, idToken);
 
-                if (!identity.getId().equals(idToken.getSubject())) {
-                    throw new IdentityBrokerException(
-                            "Mismatch between the subject in the id_token and the subject from the user_info endpoint");
-                }
+        JsonWebToken idToken = validateToken(encodedIdToken);
 
-                identity.getContextData().put(BROKER_NONCE_PARAM,
-                        idToken.getOtherClaims().get(OIDCLoginProtocol.NONCE_PARAM));
-
-                if (getConfig().isStoreToken()) {
-                    if (tokenResponse.getExpiresIn() > 0) {
-                        long accessTokenExpiration = Time.currentTime() + tokenResponse.getExpiresIn();
-                        tokenResponse.getOtherClaims().put(ACCESS_TOKEN_EXPIRATION, accessTokenExpiration);
-                        response = JsonSerialization.writeValueAsString(tokenResponse);
-                    }
-                    identity.setToken(response);
-                }
-                return identity;
-            } catch (Exception e) {
-                throw new IdentityBrokerException("Could not fetch attributes from userinfo endpoint.", e);
+        try {
+            BrokeredIdentityContext identity = extractIdentity(tokenResponse, accessToken, idToken);
+            
+            if (!identity.getId().equals(idToken.getSubject())) {
+                throw new IdentityBrokerException("Mismatch between the subject in the id_token and the subject from the user_info endpoint");
             }
+
+            identity.getContextData().put(BROKER_NONCE_PARAM, idToken.getOtherClaims().get(OIDCLoginProtocol.NONCE_PARAM));
+            
+            if (getConfig().isStoreToken()) {
+                if (tokenResponse.getExpiresIn() > 0) {
+                    long accessTokenExpiration = Time.currentTime() + tokenResponse.getExpiresIn();
+                    tokenResponse.getOtherClaims().put(ACCESS_TOKEN_EXPIRATION, accessTokenExpiration);
+                    response = JsonSerialization.writeValueAsString(tokenResponse);
+                }
+                identity.setToken(response);
+            }
+
+            return identity;
+        } catch (Exception e) {
+            throw new IdentityBrokerException("Could not fetch attributes from userinfo endpoint.", e);
         }
     }
+    }
 
-    //bidb edevlet için gerekli func. gerekli oAuth2 işlemleri yapılıyor ==Başlagıç==
+    // bidb-----------
+
     protected BrokeredIdentityContext getFederatedIdentityEdevlet(String accessToken) {
         logger.error("getFederatedIdentityEdevlet()");
         logger.error(accessToken);
@@ -521,6 +532,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
             if (localized != null) {
                 Iterator<JsonNode> iterator = localized.iterator();
+
                 if (iterator.hasNext()) {
                     return iterator.next().asText();
                 }
@@ -529,9 +541,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
         return null;
     }
-
-    //bidb edevlet için gerekli func. gerekli oAuth2 işlemleri yapılıyor ==bitiş==
-
+    // bidb----------
 
     private static final MediaType APPLICATION_JWT_TYPE = MediaType.valueOf("application/jwt");
 
@@ -539,8 +549,8 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         String id = idToken.getSubject();
         BrokeredIdentityContext identity = new BrokeredIdentityContext(id);
         String name = (String) idToken.getOtherClaims().get(IDToken.NAME);
-        String givenName = (String)idToken.getOtherClaims().get(IDToken.GIVEN_NAME);
-        String familyName = (String)idToken.getOtherClaims().get(IDToken.FAMILY_NAME);
+        String givenName = (String) idToken.getOtherClaims().get(IDToken.GIVEN_NAME);
+        String familyName = (String) idToken.getOtherClaims().get(IDToken.FAMILY_NAME);
         String preferredUsername = (String) idToken.getOtherClaims().get(getusernameClaimNameForIdToken());
         String email = (String) idToken.getOtherClaims().get(IDToken.EMAIL);
 
@@ -746,22 +756,17 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     @Override
     public void authenticationFinished(AuthenticationSessionModel authSession, BrokeredIdentityContext context) {
         AccessTokenResponse tokenResponse = (AccessTokenResponse) context.getContextData().get(FEDERATED_ACCESS_TOKEN_RESPONSE);
-        
-        if (getConfig().getAlias() == "edevlet") {
-            int currentTime = Time.currentTime();
-            long expiration = currentTime;
-            authSession.setUserSessionNote(FEDERATED_TOKEN_EXPIRATION, Long.toString(expiration));
-            authSession.setUserSessionNote(FEDERATED_REFRESH_TOKEN, null);
-            authSession.setUserSessionNote(FEDERATED_ACCESS_TOKEN, null);
-            authSession.setUserSessionNote(FEDERATED_ID_TOKEN, null);
-        } else {
-            int currentTime = Time.currentTime();
-            long expiration = tokenResponse.getExpiresIn() > 0 ? tokenResponse.getExpiresIn() + currentTime : 0;
-            authSession.setUserSessionNote(FEDERATED_TOKEN_EXPIRATION, Long.toString(expiration));
-            authSession.setUserSessionNote(FEDERATED_REFRESH_TOKEN, tokenResponse.getRefreshToken());
-            authSession.setUserSessionNote(FEDERATED_ACCESS_TOKEN, tokenResponse.getToken());
-            authSession.setUserSessionNote(FEDERATED_ID_TOKEN, tokenResponse.getIdToken());
-        }
+        int currentTime = Time.currentTime();
+
+        //long expiration = tokenResponse.getExpiresIn() > 0 ? tokenResponse.getExpiresIn() + currentTime : 0;
+        long expiration = currentTime;
+        authSession.setUserSessionNote(FEDERATED_TOKEN_EXPIRATION, Long.toString(expiration));
+        // authSession.setUserSessionNote(FEDERATED_REFRESH_TOKEN, tokenResponse.getRefreshToken());
+        // authSession.setUserSessionNote(FEDERATED_ACCESS_TOKEN, tokenResponse.getToken());
+        // authSession.setUserSessionNote(FEDERATED_ID_TOKEN, tokenResponse.getIdToken());
+        authSession.setUserSessionNote(FEDERATED_REFRESH_TOKEN, null);
+        authSession.setUserSessionNote(FEDERATED_ACCESS_TOKEN, null);
+        authSession.setUserSessionNote(FEDERATED_ID_TOKEN, null);
     }
 
     @Override
@@ -940,7 +945,9 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     @Override
     protected UriBuilder createAuthorizationUrl(AuthenticationRequest request) {
         UriBuilder uriBuilder = super.createAuthorizationUrl(request);
-        String nonce = Base64Url.encode(SecretGenerator.getInstance().randomBytes(16));
+        // String nonce =
+        // Base64Url.encode(SecretGenerator.getInstance().randomBytes(16));
+        String nonce = "bidbbidbbidbnonce";
         AuthenticationSessionModel authenticationSession = request.getAuthenticationSession();
 
         authenticationSession.setClientNote(BROKER_NONCE_PARAM, nonce);
@@ -951,25 +958,34 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
     @Override
     public void preprocessFederatedIdentity(KeycloakSession session, RealmModel realm, BrokeredIdentityContext context) {
-        if (getConfig().getAlias() != "edevlet") {
-            AuthenticationSessionModel authenticationSession = session.getContext().getAuthenticationSession();
-            
-            if (authenticationSession == null) {
-                // no interacting with the brokered OP, likely doing token exchanges
-                return;
-            }
+        AuthenticationSessionModel authenticationSession = session.getContext().getAuthenticationSession();
+        
+        if (authenticationSession == null) {
+            // no interacting with the brokered OP, likely doing token exchanges
+            return;
+        }
 
-            String nonce = (String) context.getContextData().get(BROKER_NONCE_PARAM);
+        String nonce = (String) context.getContextData().get(BROKER_NONCE_PARAM);
 
+        logger.error("preprocessFederatedIdentity  1");
+        logger.error(nonce);
+
+        if (nonce == null) {
+            context.getContextData().put(BROKER_NONCE_PARAM, "bidbbidbbidbnonce");
+            nonce = (String) context.getContextData().get(BROKER_NONCE_PARAM);
+            logger.error("preprocessFederatedIdentity  2");
+            logger.error(nonce);
             if (nonce == null) {
                 throw new IdentityBrokerException("OpenID Provider [" + getConfig().getProviderId() + "] did not return a nonce");
             }
+        }
 
-            String expectedNonce = authenticationSession.getClientNote(BROKER_NONCE_PARAM);
+        String expectedNonce = authenticationSession.getClientNote(BROKER_NONCE_PARAM);
+        logger.error("preprocessFederatedIdentity  3");
+        logger.error(expectedNonce);
 
-            if (!nonce.equals(expectedNonce)) {
-                throw new ErrorResponseException(OAuthErrorException.INVALID_TOKEN, "invalid nonce", Response.Status.BAD_REQUEST);
-            }
+        if (!nonce.equals(expectedNonce)) {
+            throw new ErrorResponseException(OAuthErrorException.INVALID_TOKEN, "invalid nonce", Response.Status.BAD_REQUEST);
         }
     }
 }
