@@ -100,8 +100,14 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
         String defaultScope = config.getDefaultScope();
 
-
-        if (!defaultScope.contains(SCOPE_OPENID) && config.getAlias() != "edevlet") { // bidb edevlet için openid scope ekleme
+        logger.error("bidb scope");
+        logger.error(config.getDefaultScope());
+        
+        // bidb edevlet için openid scope ekleme
+        if (config.getAlias() == "edevlet") { 
+           SCOPE_OPENID = "";
+        }
+        if (!defaultScope.contains(SCOPE_OPENID)) {
             config.setDefaultScope((SCOPE_OPENID + " " + defaultScope).trim());
         }
         logger.error("bidb scope");
@@ -182,9 +188,13 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     @Override
     protected Response exchangeStoredToken(UriInfo uriInfo, EventBuilder event, ClientModel authorizedClient, UserSessionModel tokenUserSession, UserModel tokenSubject) {
         FederatedIdentityModel model = session.users().getFederatedIdentity(authorizedClient.getRealm(), tokenSubject, getConfig().getAlias());
+        logger.error("exchangeStoredToken 2");
         
         //bidb edevlet oauth2 yönelendirmesi
         if(getConfig().getAlias() == "edevlet") {
+            logger.error(getConfig().getAlias());
+            logger.error(getConfig().getClientId());
+            
             if (model == null || model.getToken() == null) {
                 event.detail(Details.REASON, "requested_issuer is not linked");
                 event.error(Errors.INVALID_TOKEN);
@@ -431,6 +441,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
                     }
                     identity.setToken(response);
                 }
+
                 return identity;
             } catch (Exception e) {
                 throw new IdentityBrokerException("Could not fetch attributes from userinfo endpoint.", e);
@@ -439,6 +450,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     }
 
     //bidb edevlet için gerekli func. gerekli oAuth2 işlemleri yapılıyor ==Başlagıç==
+
     protected BrokeredIdentityContext getFederatedIdentityEdevlet(String accessToken) {
         logger.error("getFederatedIdentityEdevlet()");
         logger.error(accessToken);

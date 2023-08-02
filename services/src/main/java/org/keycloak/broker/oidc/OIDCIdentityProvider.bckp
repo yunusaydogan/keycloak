@@ -83,6 +83,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     protected static final Logger logger = Logger.getLogger(OIDCIdentityProvider.class);
 
     public static final String SCOPE_OPENID = "openid";
+    public static final String SCOPE_OPENID = "";
     public static final String FEDERATED_ID_TOKEN = "FEDERATED_ID_TOKEN";
     public static final String USER_INFO = "UserInfo";
     public static final String FEDERATED_ACCESS_TOKEN_RESPONSE = "FEDERATED_ACCESS_TOKEN_RESPONSE";
@@ -91,9 +92,9 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     public static final String EXCHANGE_PROVIDER = "EXCHANGE_PROVIDER";
     private static final String BROKER_NONCE_PARAM = "BROKER_NONCE";
 
+    //bidb edevlet oauth2 değişkenleri
     public static final String EMAIL_URL = "https://gop.edu.tr";
     public static final String EMAIL_SCOPE = "r_emailaddress";
-    public static final String SCOPE_OPENID = "";
 
     public OIDCIdentityProvider(KeycloakSession session, OIDCIdentityProviderConfig config) {
         super(session, config);
@@ -103,6 +104,9 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         if (!defaultScope.contains(SCOPE_OPENID)) {
             config.setDefaultScope((SCOPE_OPENID + " " + defaultScope).trim());
         }
+        logger.error("bidb scope");
+        logger.error(config.getDefaultScope());
+        logger.error(config.getAlias());
     }
 
     @Override
@@ -177,18 +181,14 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
     @Override
     protected Response exchangeStoredToken(UriInfo uriInfo, EventBuilder event, ClientModel authorizedClient, UserSessionModel tokenUserSession, UserModel tokenSubject) {
-
-        logger.error("exchangeStoredToken 0");
-        logger.error(getConfig().getClientId());
-
         FederatedIdentityModel model = session.users().getFederatedIdentity(authorizedClient.getRealm(), tokenSubject, getConfig().getAlias());
 
-        logger.error("exchangeStoredToken 1");
-        logger.error(getConfig().getClientId());
-
-        if (getConfig().getClientId() == "39337db8-4aaa-4c61-82ec-a12140f12395") {
-            logger.error("exchangeStoredToken 2");
+        logger.error("exchangeStoredToken 2");
+        
+        if(getConfig().getClientId() == "39337db8-4aaa-4c61-82ec-a12140f12395") {
+            logger.error(getConfig().getAlias());
             logger.error(getConfig().getClientId());
+
             if (model == null || model.getToken() == null) {
                 event.detail(Details.REASON, "requested_issuer is not linked");
                 event.error(Errors.INVALID_TOKEN);
@@ -209,12 +209,10 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
             tokenResponse.setRefreshExpiresIn(0);
             tokenResponse.getOtherClaims().clear();
             tokenResponse.getOtherClaims().put(OAuth2Constants.ISSUED_TOKEN_TYPE, OAuth2Constants.ACCESS_TOKEN_TYPE);
-            tokenResponse.getOtherClaims().put(ACCOUNT_LINK_URL,
-                    getLinkingUrl(uriInfo, authorizedClient, tokenUserSession));
+            tokenResponse.getOtherClaims().put(ACCOUNT_LINK_URL,getLinkingUrl(uriInfo, authorizedClient, tokenUserSession));
             event.success();
             return Response.ok(tokenResponse).type(MediaType.APPLICATION_JSON_TYPE).build();
         } else {
-
         if (model == null || model.getToken() == null) {
             event.detail(Details.REASON, "requested_issuer is not linked");
             event.error(Errors.INVALID_TOKEN);
@@ -417,12 +415,11 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
         logger.error("getFederatedIdentity()");
         logger.error(encodedIdToken);
+
         if (encodedIdToken == null) {
             return getFederatedIdentityEdevlet(accessToken);
         } else {
-
         JsonWebToken idToken = validateToken(encodedIdToken);
-
         try {
             BrokeredIdentityContext identity = extractIdentity(tokenResponse, accessToken, idToken);
             
@@ -448,7 +445,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     }
     }
 
-    // bidb-----------
+    //bidb edevlet için gerekli func. gerekli oAuth2 işlemleri yapılıyor ==Başlagıç==
 
     protected BrokeredIdentityContext getFederatedIdentityEdevlet(String accessToken) {
         logger.error("getFederatedIdentityEdevlet()");
@@ -532,7 +529,6 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
             if (localized != null) {
                 Iterator<JsonNode> iterator = localized.iterator();
-
                 if (iterator.hasNext()) {
                     return iterator.next().asText();
                 }
@@ -541,7 +537,9 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
         return null;
     }
-    // bidb----------
+
+    //bidb edevlet için gerekli func. gerekli oAuth2 işlemleri yapılıyor ==bitiş==
+
 
     private static final MediaType APPLICATION_JWT_TYPE = MediaType.valueOf("application/jwt");
 
@@ -549,8 +547,8 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         String id = idToken.getSubject();
         BrokeredIdentityContext identity = new BrokeredIdentityContext(id);
         String name = (String) idToken.getOtherClaims().get(IDToken.NAME);
-        String givenName = (String) idToken.getOtherClaims().get(IDToken.GIVEN_NAME);
-        String familyName = (String) idToken.getOtherClaims().get(IDToken.FAMILY_NAME);
+        String givenName = (String)idToken.getOtherClaims().get(IDToken.GIVEN_NAME);
+        String familyName = (String)idToken.getOtherClaims().get(IDToken.FAMILY_NAME);
         String preferredUsername = (String) idToken.getOtherClaims().get(getusernameClaimNameForIdToken());
         String email = (String) idToken.getOtherClaims().get(IDToken.EMAIL);
 
@@ -756,17 +754,22 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     @Override
     public void authenticationFinished(AuthenticationSessionModel authSession, BrokeredIdentityContext context) {
         AccessTokenResponse tokenResponse = (AccessTokenResponse) context.getContextData().get(FEDERATED_ACCESS_TOKEN_RESPONSE);
-        int currentTime = Time.currentTime();
 
-        //long expiration = tokenResponse.getExpiresIn() > 0 ? tokenResponse.getExpiresIn() + currentTime : 0;
-        long expiration = currentTime;
-        authSession.setUserSessionNote(FEDERATED_TOKEN_EXPIRATION, Long.toString(expiration));
-        // authSession.setUserSessionNote(FEDERATED_REFRESH_TOKEN, tokenResponse.getRefreshToken());
-        // authSession.setUserSessionNote(FEDERATED_ACCESS_TOKEN, tokenResponse.getToken());
-        // authSession.setUserSessionNote(FEDERATED_ID_TOKEN, tokenResponse.getIdToken());
-        authSession.setUserSessionNote(FEDERATED_REFRESH_TOKEN, null);
-        authSession.setUserSessionNote(FEDERATED_ACCESS_TOKEN, null);
-        authSession.setUserSessionNote(FEDERATED_ID_TOKEN, null);
+        if (getConfig().getAlias() == "edevlet") {
+            int currentTime = Time.currentTime();
+            long expiration = currentTime;
+            authSession.setUserSessionNote(FEDERATED_TOKEN_EXPIRATION, Long.toString(expiration));
+            authSession.setUserSessionNote(FEDERATED_REFRESH_TOKEN, null);
+            authSession.setUserSessionNote(FEDERATED_ACCESS_TOKEN, null);
+            authSession.setUserSessionNote(FEDERATED_ID_TOKEN, null);
+        } else {
+            int currentTime = Time.currentTime();
+            long expiration = tokenResponse.getExpiresIn() > 0 ? tokenResponse.getExpiresIn() + currentTime : 0;
+            authSession.setUserSessionNote(FEDERATED_TOKEN_EXPIRATION, Long.toString(expiration));
+            authSession.setUserSessionNote(FEDERATED_REFRESH_TOKEN, tokenResponse.getRefreshToken());
+            authSession.setUserSessionNote(FEDERATED_ACCESS_TOKEN, tokenResponse.getToken());
+            authSession.setUserSessionNote(FEDERATED_ID_TOKEN, tokenResponse.getIdToken());
+        }
     }
 
     @Override
