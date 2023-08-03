@@ -522,7 +522,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         JsonNode response = SimpleHttp.doGet("http://localhost:3000/getUserWithAttribute?token=SQtJmcGdThUpo6H6h4OgwP4dC5s5oj7ps4uOt1t1VWvyB4IsBcrGeVQiuVPJ5oqWUeiXKhxEZFKes7sMSMuYWqzbk1k9scXZbZ7CZ&AccessToken="+AccessToken +"&clientid="+clientid,session).asJson();
 
         if (response.hasNonNull("serviceErrorCode")) {
-        throw new IdentityBrokerException("Could not obtain response from [" + tc +
+        throw new IdentityBrokerException("Could not obtain response from [" + clientid +
         "]. Response from server: " + response);
         }
 
