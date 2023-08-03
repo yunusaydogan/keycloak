@@ -465,7 +465,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         logger.error("getFederatedIdentityEdevlet()");
         logger.error(accessToken);
         try {
-            BrokeredIdentityContext identity = extractIdentityFromProfileEdevlet(null,doHttpGetUserInfoWithTc("18734309634"));
+            BrokeredIdentityContext identity = extractIdentityFromProfileEdevlet(null,doHttpGetUserInfoWithTc(accessToken, getConfig().getClientId()));
             logger.error("getFederatedIdentityEdevlet() 2");
             logger.error(accessToken);
             // identity.setEmail(fetchEmailAddress(accessToken, identity));
@@ -514,11 +514,12 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         return user;
     }
 
-    protected JsonNode doHttpGetUserInfoWithTc(String tc) throws IOException {
+    protected JsonNode doHttpGetUserInfoWithTc(String AccessToken, String clientid ) throws IOException {
 
          logger.error("bidb:1 doHttpGet");
-        logger.error(tc);
-        JsonNode response = SimpleHttp.doGet("http://localhost:3000/getUserWithAttribute?token=SQtJmcGdThUpo6H6h4OgwP4dC5s5oj7ps4uOt1t1VWvyB4IsBcrGeVQiuVPJ5oqWUeiXKhxEZFKes7sMSMuYWqzbk1k9scXZbZ7CZ&tc="+tc,session).asJson();
+        logger.error(AccessToken);
+        logger.error(clientid);
+        JsonNode response = SimpleHttp.doGet("http://localhost:3000/getUserWithAttribute?token=SQtJmcGdThUpo6H6h4OgwP4dC5s5oj7ps4uOt1t1VWvyB4IsBcrGeVQiuVPJ5oqWUeiXKhxEZFKes7sMSMuYWqzbk1k9scXZbZ7CZ&AccessToken="+AccessToken +"&clientid="+clientid,session).asJson();
 
         if (response.hasNonNull("serviceErrorCode")) {
         throw new IdentityBrokerException("Could not obtain response from [" + tc +
