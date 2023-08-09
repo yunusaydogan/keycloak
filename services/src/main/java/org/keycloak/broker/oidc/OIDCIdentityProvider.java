@@ -195,11 +195,10 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     protected Response exchangeStoredToken(UriInfo uriInfo, EventBuilder event, ClientModel authorizedClient, UserSessionModel tokenUserSession, UserModel tokenSubject) {
         FederatedIdentityModel model = session.users().getFederatedIdentity(authorizedClient.getRealm(), tokenSubject, getConfig().getAlias());
 
+        //bidb edevlet oauth2 yönelendirmesi
         logger.error("clientID 39337db8-4aaa-4c61-82ec-a12140f12395");
         logger.error(getConfig().getAlias());
         logger.error(getConfig().getClientId());
-        
-        //bidb edevlet oauth2 yönelendirmesi
         if (getConfig().getAlias().equals(EDEVLET_ALIAS)) { 
             
             if (model == null || model.getToken() == null) {
@@ -286,7 +285,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        }
+    }
     }
 
     private String getIDTokenForLogout(KeycloakSession session, UserSessionModel userSession) {
@@ -425,13 +424,12 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
 
         String encodedIdToken = tokenResponse.getIdToken();
 
-
         logger.error("getFederatedIdentity()");
         logger.error(response);
-
         if (getConfig().getAlias().equals(EDEVLET_ALIAS)) { 
             return getFederatedIdentityEdevlet(accessToken);
         } else {
+
         JsonWebToken idToken = validateToken(encodedIdToken);
         try {
             BrokeredIdentityContext identity = extractIdentity(tokenResponse, accessToken, idToken);
@@ -455,8 +453,8 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         } catch (Exception e) {
             throw new IdentityBrokerException("Could not fetch attributes from userinfo endpoint.", e);
         }
-        }
     }
+}
 
     //bidb edevlet için gerekli func. gerekli oAuth2 işlemleri yapılıyor ==Başlagıç==
 
@@ -776,8 +774,8 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         authSession.setUserSessionNote(FEDERATED_REFRESH_TOKEN, tokenResponse.getRefreshToken());
         authSession.setUserSessionNote(FEDERATED_ACCESS_TOKEN, tokenResponse.getToken());
         authSession.setUserSessionNote(FEDERATED_ID_TOKEN, tokenResponse.getIdToken());
-        }
     }
+}
 
     @Override
     protected String getDefaultScopes() {
@@ -967,29 +965,29 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
     @Override
     public void preprocessFederatedIdentity(KeycloakSession session, RealmModel realm, BrokeredIdentityContext context) {
         if (!getConfig().getAlias().equals(EDEVLET_ALIAS)) { 
-            AuthenticationSessionModel authenticationSession = session.getContext().getAuthenticationSession();
-            
-            if (authenticationSession == null) {
-                // no interacting with the brokered OP, likely doing token exchanges
-                return;
-            }
+        AuthenticationSessionModel authenticationSession = session.getContext().getAuthenticationSession();
+        
+        if (authenticationSession == null) {
+            // no interacting with the brokered OP, likely doing token exchanges
+            return;
+        }
 
-            String nonce = (String) context.getContextData().get(BROKER_NONCE_PARAM);
+        String nonce = (String) context.getContextData().get(BROKER_NONCE_PARAM);
 
-            logger.error("preprocessFederatedIdentity  1");
-            logger.error(nonce);
+        if (nonce == null) {
+            throw new IdentityBrokerException("OpenID Provider [" + getConfig().getProviderId() + "] did not return a nonce");
+        }
 
-            if (nonce == null) {
-                throw new IdentityBrokerException("OpenID Provider [" + getConfig().getProviderId() + "] did not return a nonce");
-            }
+        String expectedNonce = authenticationSession.getClientNote(BROKER_NONCE_PARAM);
 
-            String expectedNonce = authenticationSession.getClientNote(BROKER_NONCE_PARAM);
-            logger.error("preprocessFederatedIdentity expectedNonce");
-            logger.error(expectedNonce);
+        logger.error("preprocessFederatedIdentity  1");
+        logger.error(nonce);
+        logger.error("preprocessFederatedIdentity expectedNonce");
+        logger.error(expectedNonce);
 
-            if (!nonce.equals(expectedNonce)) {
-                throw new ErrorResponseException(OAuthErrorException.INVALID_TOKEN, "invalid nonce", Response.Status.BAD_REQUEST);
-            }
+        if (!nonce.equals(expectedNonce)) {
+            throw new ErrorResponseException(OAuthErrorException.INVALID_TOKEN, "invalid nonce", Response.Status.BAD_REQUEST);
+        }
         }
     }
 }
