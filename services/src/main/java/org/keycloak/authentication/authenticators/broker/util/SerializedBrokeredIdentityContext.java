@@ -319,8 +319,9 @@ public class SerializedBrokeredIdentityContext implements UpdateProfileContext {
         ctx.emailAsUsername = context.getAuthenticationSession().getRealm().isRegistrationEmailAsUsername();
 
         IdentityProviderDataMarshaller serializer = context.getIdp().getMarshaller();
-
         // bidb edevlet providerID edevlet olduğunda json verisini oluşturma
+        // bidb edevlet providerID oidc olduğu halde hata vermiyor???? muhtemelen gereksiz!!!
+        // context.getIdpConfig().getAlias() == "edevlet".equals(EDEVLET_ALIAS || "oidc")
         if(context.getIdpConfig().getAlias() == "edevlet") return ctx;
 
         for (Map.Entry<String, Object> entry : context.getContextData().entrySet()) {
@@ -330,7 +331,6 @@ public class SerializedBrokeredIdentityContext implements UpdateProfileContext {
             ContextDataEntry ctxEntry = ContextDataEntry.create(value.getClass().getName(), serializedValue);
             ctx.getContextData().put(entry.getKey(), ctxEntry);
         }
-        
         return ctx;
     }
 
