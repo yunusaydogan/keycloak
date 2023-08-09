@@ -285,7 +285,7 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
+        }
     }
 
     private String getIDTokenForLogout(KeycloakSession session, UserSessionModel userSession) {
@@ -453,8 +453,8 @@ public class OIDCIdentityProvider extends AbstractOAuth2IdentityProvider<OIDCIde
         } catch (Exception e) {
             throw new IdentityBrokerException("Could not fetch attributes from userinfo endpoint.", e);
         }
+        }
     }
-}
 
     //bidb edevlet için gerekli func. gerekli oAuth2 işlemleri yapılıyor ==Başlagıç==
 
